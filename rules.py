@@ -102,6 +102,7 @@ async def help_command(ctx):
 
     # General commands
     description += "\n`..rules`: Displays the current server rules."
+    description += "\n`..ping`: Latency check"
 
     # Admin commands (for admins)
     if ctx.author.id in admins:
