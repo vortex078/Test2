@@ -180,6 +180,12 @@ async def remove_timeout(ctx, member: discord.Member = None):
     await member.edit(timed_out_until=None)
     await ctx.send(f"❌ **{member.name}**'s timeout has been removed.")
 
+@bot.command(name="ping")
+async def ping(ctx):
+    """Responds with the bot's latency to check if the bot is working."""
+    latency = round(bot.latency * 1000)  # Latency in milliseconds
+    await ctx.send(f"🏓 Pong! Latency is {latency}ms")
+
 import os
 TOKEN = os.getenv("DISCORD_TOKEN")  # Get token from environment
 bot.run(TOKEN)
