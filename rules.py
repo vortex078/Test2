@@ -143,8 +143,10 @@ async def help_command(ctx):
         description += "\n`..del`: Deletes the stored server rules."
         description += "\n`..kick @user <reason>`: Kicks user with reason."
         description += "\n`..ban @user <reason>`: Bans user with reason."
+        description += "\n`..unban @user`: Un-bans user."
         description += "\n`..time @user <length>`: Times-out member."
         description += "\n`..notime @user <length>`: Removes time-out from member."
+        description += "\n`..listadmins`: Lists all current admins."
         description += "\n`..warn @user <auto>`: Warns user."
         description += "\n`..add @user <role>`: Gives role."
         description += "\n`..rem @user <role>`: Removes role."
@@ -168,7 +170,7 @@ async def help_command(ctx):
 async def kick(ctx, member: discord.Member = None, *, reason: str = None):
     """Kicks a member from the server, requiring a reason."""
     if not member or not reason:
-        await ctx.send("⚠ **Usage:** `..kick @user [reason]`\nExample: `..kick @user Spamming`")
+        await ctx.send("⚠ **Usage:** `..kick @user <reason>`\nExample: `..kick @user Spamming`")
         return
 
     await member.kick(reason=reason)
@@ -180,18 +182,37 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
 async def ban(ctx, member: discord.Member = None, *, reason: str = None):
     """Bans a member from the server, requiring a reason."""
     if not member or not reason:
-        await ctx.send("⚠ **Usage:** `..ban @user [reason]`\nExample: `..ban @user Harassment`")
+        await ctx.send("⚠ **Usage:** `..ban @user <reason>`\nExample: `..ban @user Harassment`")
         return
 
     await member.ban(reason=reason)
     await ctx.send(f"🔨 **{member.name}** has been banned. Reason: {reason}")
+
+@bot.command(name="unban")
+@is_admin()
+async def unban(ctx, user: discord.User = None):
+    """Unbans a member from the server by user ID."""
+    if not user:
+        await ctx.send("⚠ **Usage:** `..unban @user` or `..unban <user_id>`")
+        return
+
+    try:
+        # Unban the user
+        await ctx.guild.unban(user)
+        await ctx.send(f"✅ **{user.name}** has been unbanned from the server.")
+    except discord.NotFound:
+        await ctx.send("⚠ This user is not banned.")
+    except discord.Forbidden:
+        await ctx.send("⚠ I do not have permission to unban this user.")
+    except Exception as e:
+        await ctx.send(f"⚠ An error occurred: {str(e)}")
 
 @bot.command(name="time")
 @is_admin()
 async def timeout(ctx, member: discord.Member = None, length: str = None):
     """Times out a member for a given length (m for minutes, h for hours)."""
     if not member or not length:
-        await ctx.send("⚠ **Usage:** `..time @user (length) m/h`\nExample: `..time @user 10m` or `..time @user 2h`")
+        await ctx.send("⚠ **Usage:** `..time @user <length> m/h`\nExample: `..time @user 10m` or `..time @user 2h`")
         return
     
     try:
