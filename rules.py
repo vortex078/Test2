@@ -199,7 +199,7 @@ async def ping(ctx):
 async def add_role(ctx, member: discord.Member = None, *, role_name: str = None):
     """Adds a role to a member using a keyword search."""
     if not member or not role_name:
-        await ctx.send("⚠ **Usage:** `..add @user (role keyword)`\nExample: `..add @user Member`")
+        await ctx.send("⚠ **Usage:** `..add @user <role>`\nExample: `..add @user Member`")
         return
 
     # Find roles that match the keyword (case-insensitive)
@@ -229,7 +229,7 @@ async def add_role(ctx, member: discord.Member = None, *, role_name: str = None)
 async def remove_role(ctx, member: discord.Member = None, *, role_name: str = None):
     """Removes a role from a member using a keyword search."""
     if not member or not role_name:
-        await ctx.send("⚠ **Usage:** `..rem @user (role keyword)`\nExample: `..rem @user Member`")
+        await ctx.send("⚠ **Usage:** `..rem @user <role>`\nExample: `..rem @user Member`")
         return
 
     # Find roles that match the keyword (case-insensitive)
