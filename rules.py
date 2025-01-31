@@ -9,7 +9,11 @@ bot = commands.Bot(command_prefix="..", intents=intents)
 
 rules_storage = {}
 OWNER_ID = 707584409531842623
-admins = {OWNER_ID}
+# Hardcoded admins (cannot be removed)
+HARD_CODED_ADMINS = {OWNER_ID, 868457267614326804, 783040247977738260, 769130718609539073, 801025709673676801, 1046737090928443422, 1048698679239913542, 1318509149570728028, 1319634692512809112}  # Replace with actual IDs
+
+# Set containing both hardcoded and dynamically added admins
+admins = set(HARD_CODED_ADMINS)
 
 @bot.event
 async def on_ready():
@@ -23,25 +27,25 @@ def is_admin():
         return False
     return commands.check(predicate)
 
+def get_all_admins():
+    """Returns a set of all current admins (both hardcoded and dynamic)."""
+    return HARD_CODED_ADMINS | admins
+
 @bot.command(name="addadmin")
 async def add_admin(ctx, member: discord.Member):
-    """Allows the OWNER to add a new admin."""
+    """Allows the OWNER to add a new admin (including re-adding hardcoded ones)."""
     if ctx.author.id != OWNER_ID:
         await ctx.send("⛔ Only the **bot owner** can add admins!")
         return
 
-    admins.add(member.id)
+    admins.add(member.id)  # Add to admin list
     await ctx.send(f"✅ **{member.name}** has been added as an admin!")
 
 @bot.command(name="removeadmin")
 async def remove_admin(ctx, member: discord.Member):
-    """Allows the OWNER to remove an admin."""
+    """Allows the OWNER to remove any admin, including hardcoded ones."""
     if ctx.author.id != OWNER_ID:
         await ctx.send("⛔ Only the **bot owner** can remove admins!")
-        return
-
-    if member.id == OWNER_ID:
-        await ctx.send("⚠ You cannot remove yourself as an admin!")
         return
 
     if member.id in admins:
@@ -49,6 +53,34 @@ async def remove_admin(ctx, member: discord.Member):
         await ctx.send(f"❌ **{member.name}** has been removed as an admin.")
     else:
         await ctx.send("⚠ This user is **not an admin**!")
+
+@bot.command(name="listadmins")
+async def list_admins(ctx):
+    """Displays the list of current admins in an embed without pinging them."""
+    if not admins:
+        await ctx.send("⚠ No admins found!")
+        return
+
+    hardcoded_admins = []
+    added_admins = []
+
+    for admin_id in admins:
+        member = ctx.guild.get_member(admin_id)
+        admin_name = member.name if member else f"Unknown User ({admin_id})"
+
+        if admin_id in HARD_CODED_ADMINS:
+            hardcoded_admins.append(admin_name)
+        else:
+            added_admins.append(admin_name)
+
+    hardcoded_text = "\n".join(hardcoded_admins) if hardcoded_admins else "None"
+    added_text = "\n".join(added_admins) if added_admins else "None"
+
+    embed = discord.Embed(title="👑 Admin List", color=discord.Color.gold())
+    embed.description = f"🔸 **Hardcoded Admins**\n{hardcoded_text}\n\n🔹 **Added Admins**\n{added_text}"
+
+    await ctx.send(embed=embed)
+
 
 @bot.command(name="set")
 @is_admin()
@@ -113,6 +145,7 @@ async def help_command(ctx):
         description += "\n`..ban @user <reason>`: Bans user with reason."
         description += "\n`..time @user <length>`: Times-out member."
         description += "\n`..notime @user <length>`: Removes time-out from member."
+        description += "\n`..warn @user <auto>`: Warns user."
         description += "\n`..add @user <role>`: Gives role."
         description += "\n`..rem @user <role>`: Removes role."
 
@@ -254,6 +287,49 @@ async def remove_role(ctx, member: discord.Member = None, *, role_name: str = No
     
     await member.remove_roles(role)
     await ctx.send(f"✅ **{member.name}** has been removed from the role `{role.name}`.")
+
+
+@bot.command(name="warn")
+@commands.has_permissions(manage_roles=True)
+async def warn(ctx, member: discord.Member = None):
+    """Warn a user and apply the appropriate warning role."""
+    
+    # Check if member is provided
+    if not member:
+        await ctx.send("⚠ **Usage:** `..warn @user`\nExample: `..warn @user NSFW`")
+        return
+    
+    warn_roles = ["warn1", "warn2", "warn3"]
+    user_roles = [role.name for role in member.roles]
+    
+    # Find the highest warn role the user has
+    current_warn = None
+    for role in warn_roles:
+        if role in user_roles:
+            current_warn = role
+
+    # Determine next warn level
+    if current_warn is None:
+        next_warn = "warn1"
+    elif current_warn == "warn1":
+        next_warn = "warn2"
+    elif current_warn == "warn2":
+        next_warn = "warn3"
+    else:
+        await ctx.send(f"{member.mention} already has **3 warnings**! Take action accordingly.")
+        return
+    
+    # Get the role object
+    role_to_add = discord.utils.get(ctx.guild.roles, name=next_warn)
+    if not role_to_add:
+        await ctx.send(f"⚠ Role `{next_warn}` not found on this server!")
+        return
+    
+    
+    # Apply the next warning role
+    await member.add_roles(role_to_add)
+    
+    await ctx.send(f"{member.mention} has been **warned** and given `{next_warn}` role.")
 
 import os
 TOKEN = os.getenv("DISCORD_TOKEN")  # Get token from environment
