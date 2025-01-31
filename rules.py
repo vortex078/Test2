@@ -98,28 +98,36 @@ async def show_rules(ctx):
 @bot.command(name="Help")
 async def help_command(ctx):
     """Displays all available bot commands."""
+    description = "Here are the available commands:\n"
+
+    # General commands
+    description += "\n`..rules`: Displays the current server rules."
+
+    # Admin commands (for admins)
+    if ctx.author.id in admins:
+        description += "\n`..set <text>`: Sets the server rules."
+        description += "\n`..edit <text>`: Edits the existing rules."
+        description += "\n`..del`: Deletes the stored server rules."
+        description += "\n`..kick @user <reason>`: Kicks user with reason."
+        description += "\n`..ban @user <reason>`: Bans user with reason."
+        description += "\n`..time @user <length>`: Times-out member."
+        description += "\n`..notime @user <length>`: Removes time-out from member."
+        description += "\n`..add @user <role>`: Gives role."
+        description += "\n`..rem @user <role>`: Removes role."
+
+    # Owner-specific commands (for the bot owner)
+    if ctx.author.id == OWNER_ID:
+        description += "\n`..addadmin @user`: Adds a new admin."
+        description += "\n`..removeadmin @user`: Removes an admin."
+
     embed = discord.Embed(
         title="🤖 Bot Commands",
-        description="Here are the available commands:",
+        description=description,
         color=discord.Color.from_rgb(0, 0, 0)
     )
 
-    embed.add_field(name="`..rules`", value="Displays the current server rules.", inline=False)
-    
-    if ctx.author.id in admins:
-        embed.add_field(name="`..set (rules text)`", value="Sets the server rules.", inline=False)
-        embed.add_field(name="`..edit (new rules text)`", value="Edits the existing rules.", inline=False)
-        embed.add_field(name="`..del`", value="Deletes the stored server rules.", inline=False)
-    
-    if ctx.author.id == OWNER_ID:
-        embed.add_field(name="`..addadmin @user`", value="Adds a new admin.", inline=False)
-        embed.add_field(name="`..removeadmin @user`", value="Removes an admin.", inline=False)
-        embed.add_field(name="`..kick @user <reason>`", value="Kicks user with reason", inline=False)
-        embed.add_field(name="`..ban @user <reason>`", value="Bans user with reason", inline=False)
-        embed.add_field(name="`..time @user <length>`", value="Times-out member", inline=False)
-        embed.add_field(name="`..notime @user <length>`", value="Removes time-out from member", inline=False)
-
     await ctx.send(embed=embed)
+
 
 @bot.command(name="kick")
 @is_admin()
@@ -185,6 +193,66 @@ async def ping(ctx):
     """Responds with the bot's latency to check if the bot is working."""
     latency = round(bot.latency * 1000)  # Latency in milliseconds
     await ctx.send(f"🏓 Pong! Latency is {latency}ms")
+
+@bot.command(name="add")
+@is_admin()
+async def add_role(ctx, member: discord.Member = None, *, role_name: str = None):
+    """Adds a role to a member using a keyword search."""
+    if not member or not role_name:
+        await ctx.send("⚠ **Usage:** `..add @user (role keyword)`\nExample: `..add @user Member`")
+        return
+
+    # Find roles that match the keyword (case-insensitive)
+    matching_roles = [role for role in ctx.guild.roles if role_name.lower() in role.name.lower()]
+
+    if not matching_roles:
+        await ctx.send(f"⚠ No roles found with the keyword `{role_name}`.")
+        return
+
+    if len(matching_roles) > 1:
+        roles_list = "\n".join([role.name for role in matching_roles])
+        await ctx.send(f"⚠ Multiple roles found with the keyword `{role_name}`:\n{roles_list}\nPlease be more specific.")
+        return
+
+    role = matching_roles[0]
+    
+    # Check if the bot has permission to assign the role
+    if role.position >= ctx.author.top_role.position:
+        await ctx.send(f"⚠ You cannot assign the role `{role.name}` as it is higher than your top role.")
+        return
+    
+    await member.add_roles(role)
+    await ctx.send(f"✅ **{member.name}** has been given the role `{role.name}`.")
+
+@bot.command(name="rem")
+@is_admin()
+async def remove_role(ctx, member: discord.Member = None, *, role_name: str = None):
+    """Removes a role from a member using a keyword search."""
+    if not member or not role_name:
+        await ctx.send("⚠ **Usage:** `..rem @user (role keyword)`\nExample: `..rem @user Member`")
+        return
+
+    # Find roles that match the keyword (case-insensitive)
+    matching_roles = [role for role in ctx.guild.roles if role_name.lower() in role.name.lower()]
+
+    if not matching_roles:
+        await ctx.send(f"⚠ No roles found with the keyword `{role_name}`.")
+        return
+
+    if len(matching_roles) > 1:
+        roles_list = "\n".join([role.name for role in matching_roles])
+        await ctx.send(f"⚠ Multiple roles found with the keyword `{role_name}`:\n{roles_list}\nPlease be more specific.")
+        return
+
+    role = matching_roles[0]
+    
+    # Check if the bot has permission to remove the role
+    if role.position >= ctx.author.top_role.position:
+        await ctx.send(f"⚠ You cannot remove the role `{role.name}` as it is higher than your top role.")
+        return
+    
+    await member.remove_roles(role)
+    await ctx.send(f"✅ **{member.name}** has been removed from the role `{role.name}`.")
 
 import os
 TOKEN = os.getenv("DISCORD_TOKEN")  # Get token from environment
