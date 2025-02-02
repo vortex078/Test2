@@ -144,7 +144,7 @@ async def help_command(ctx):
         description += "\n`..ban @user <reason>`: Bans user with reason."
         description += "\n`..unban @user`: Un-bans user."
         description += "\n`..time @user <length>`: Times-out member."
-        description += "\n`..notime @user <length>`: Removes time-out from member."
+        description += "\n`..notime @user`: Removes time-out from member."
         description += "\n`..listadmins`: Lists all current admins."
         description += "\n`..warn @user <auto>`: Warns user."
         description += "\n`..add @user <role>`: Gives role."
