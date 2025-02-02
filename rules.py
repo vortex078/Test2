@@ -85,42 +85,41 @@ async def list_admins(ctx):
 @bot.command(name="set")
 @is_admin()
 async def set_rules(ctx, *, rules_text: str):
-    """Allows an admin to set the server rules."""
+    """Allows an admin to set the server info."""
     rules_storage[ctx.guild.id] = rules_text
-    await ctx.send("✅ Rules have been set successfully!")
+    await ctx.send("✅ Info has been set successfully!")
 
 @bot.command(name="edit")
 @is_admin()
 async def edit_rules(ctx, *, new_rules: str = None):
-    """Edits the existing rules."""
+    """Edits the existing information."""
     if ctx.guild.id not in rules_storage:
-        await ctx.send("⚠ No rules found. Use `..set (rules)` first.")
+        await ctx.send("⚠ No Info found. Use `..set (info)` first.")
         return
 
     if not new_rules:
-        await ctx.send("⚠ Please provide new rules. Example:\n`..edit Be nice to everyone.`")
+        await ctx.send("⚠ Please provide new info. Example:\n`..edit Be nice to everyone.`")
         return
 
     rules_storage[ctx.guild.id] = new_rules
-    await ctx.send("✅ Rules have been updated successfully!")
+    await ctx.send("✅ Info have been updated successfully!")
 
 @bot.command(name="del")
 @is_admin()
 async def delete_rules(ctx):
-    """Deletes the stored server rules."""
+    """Deletes the stored server info."""
     if ctx.guild.id in rules_storage:
         del rules_storage[ctx.guild.id]
-        await ctx.send("🗑 Rules have been **deleted** successfully!")
+        await ctx.send("🗑 Info has been **deleted** successfully!")
     else:
-        await ctx.send("⚠ No rules are set to delete.")
+        await ctx.send("⚠ No Info is set to delete.")
 
-@bot.command(name="rules")
+@bot.command(name="info")
 async def show_rules(ctx):
-    """Displays the stored server rules."""
-    rules_text = rules_storage.get(ctx.guild.id, "⚠ No rules have been set yet. Use `..set (rules)` to set them.")
+    """Displays the stored server info."""
+    rules_text = rules_storage.get(ctx.guild.id, "⚠ No information has been set yet. Use `..set (info)` to set them.")
 
     embed = discord.Embed(
-        title="📜 Server Rules",
         description=rules_text,
         color=discord.Color.from_rgb(0, 0, 0)
     )
@@ -133,14 +132,14 @@ async def help_command(ctx):
     description = "Here are the available commands:\n"
 
     # General commands
-    description += "\n`..rules`: Displays the current server rules."
+    description += "\n`..info`: Displays the current server info."
     description += "\n`..ping`: Latency check"
 
     # Admin commands (for admins)
     if ctx.author.id in admins:
-        description += "\n`..set <text>`: Sets the server rules."
-        description += "\n`..edit <text>`: Edits the existing rules."
-        description += "\n`..del`: Deletes the stored server rules."
+        description += "\n`..set <text>`: Sets the server info."
+        description += "\n`..edit <text>`: Edits the existing info."
+        description += "\n`..del`: Deletes the stored server indo."
         description += "\n`..kick @user <reason>`: Kicks user with reason."
         description += "\n`..ban @user <reason>`: Bans user with reason."
         description += "\n`..unban @user`: Un-bans user."
