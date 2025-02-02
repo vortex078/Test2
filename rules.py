@@ -10,7 +10,7 @@ bot = commands.Bot(command_prefix="..", intents=intents)
 rules_storage = {}
 OWNER_ID = 707584409531842623
 # Hardcoded admins (cannot be removed)
-HARD_CODED_ADMINS = {OWNER_ID, 868457267614326804, 783040247977738260, 769130718609539073, 801025709673676801, 1046737090928443422, 1048698679239913542, 1318509149570728028, 1319634692512809112}  # Replace with actual IDs
+HARD_CODED_ADMINS = {OWNER_ID, 1100153627789762651, 1020763463456391179, 483953231559524352}  # Replace with actual IDs
 
 # Set containing both hardcoded and dynamically added admins
 admins = set(HARD_CODED_ADMINS)
@@ -350,6 +350,15 @@ async def warn(ctx, member: discord.Member = None):
     await member.add_roles(role_to_add)
     
     await ctx.send(f"{member.mention} has been **warned** and given `{next_warn}` role.")
+
+@bot.event
+async def on_member_join(member):
+    """Greets new members when they join the server."""
+    channel_id = 1335559901459513415  # Replace with your channel ID
+    channel = bot.get_channel(channel_id)
+
+    if channel:
+        await channel.send(f"🎉 Welcome to HostCenter, {member.mention}!\nEnjoy your stay! 🚀")
 
 import os
 TOKEN = os.getenv("DISCORD_TOKEN")  # Get token from environment
