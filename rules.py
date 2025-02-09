@@ -10,7 +10,7 @@ bot = commands.Bot(command_prefix="..", intents=intents)
 rules_storage = {}
 OWNER_ID = 707584409531842623
 # Hardcoded admins (cannot be removed)
-HARD_CODED_ADMINS = {OWNER_ID, 1100153627789762651, 1020763463456391179, 483953231559524352, 505442236280864768}  # Replace with actual IDs
+HARD_CODED_ADMINS = {OWNER_ID, 1100153627789762651, 1020763463456391179, 483953231559524352, 505442236280864768, 1335723024745365527}  # Replace with actual IDs
 
 # Set containing both hardcoded and dynamically added admins
 admins = set(HARD_CODED_ADMINS)
