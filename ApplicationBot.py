@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import json
 import os
 
-bot = commands.Bot(command_prefix='/', intents=discord.Intents.all(), help_command=None)
+bot = commands.Bot(command_prefix='!', intents=discord.Intents.all(), help_command=None)
 
 afk_file = "afk.json"
 afk_message = {}
