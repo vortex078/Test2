@@ -94,7 +94,8 @@ async def on_message(message):
         with open(afk_file, "w") as f:
             json.dump(afk_message, f)
             del afk_message_count[user_id]
-            await bot.process_commands(message)
+
+    await bot.process_commands(message)
 
 @bot.event
 async def on_message_edit(before, after):
