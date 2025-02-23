@@ -71,6 +71,9 @@ async def on_message(message):
     global afk_message
     global afk_message_count
 
+    if message.content.startswith(bot.command_prefix):
+        await bot.process_commands(message)
+
     if message.author != bot.user:
         for mention in message.mentions:
             mentioned_user_id = str(mention.id)
