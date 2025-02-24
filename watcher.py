@@ -70,5 +70,5 @@ async def on_presence_update(before, after):
 
 
 import os
-TOKEN = os.getenv("BOTTOKEN")
+TOKEN = os.getenv("watch")
 bot.run(TOKEN)
