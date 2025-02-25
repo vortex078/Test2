@@ -52,7 +52,6 @@ async def t(ctx, member: discord.Member, duration: int):
         await ctx.message.add_reaction("❌")  # Add red X on failure
 
 @bot.command()
-@commands.has_permissions(manage_members=True)
 async def ut(ctx, member: discord.Member):
     """
     Untimeout a member.
