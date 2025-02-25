@@ -35,6 +35,49 @@ async def Help(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+async def r(ctx, action: str = None, role_name: str = None, member: discord.Member = None):
+    """
+    Display all roles or assign roles to a member.
+    Usage:
+    - ..r -> Displays all roles in sections.
+    - ..r assign <role_name> <@member> -> Assigns the specified role to the mentioned member.
+    """
+    if action is None:
+        # Display all roles in separate sections
+        roles = ctx.guild.roles
+        embed = discord.Embed(title="Roles in the server", color=discord.Color.blue())
+
+        # Grouping roles into sections (e.g., Admin roles, Member roles)
+        admin_roles = [role for role in roles if "admin" in role.name.lower()]
+        member_roles = [role for role in roles if "member" in role.name.lower()]
+        other_roles = [role for role in roles if role not in admin_roles and role not in member_roles]
+
+        if admin_roles:
+            embed.add_field(name="Admin Roles", value="\n".join([role.name for role in admin_roles]), inline=False)
+        if member_roles:
+            embed.add_field(name="Member Roles", value="\n".join([role.name for role in member_roles]), inline=False)
+        if other_roles:
+            embed.add_field(name="Other Roles", value="\n".join([role.name for role in other_roles]), inline=False)
+
+        await ctx.send(embed=embed)
+
+    elif action.lower() == "assign" and role_name and member:
+        # Assign a role to a member
+        role = discord.utils.get(ctx.guild.roles, name=role_name)
+        if role:
+            try:
+                await member.add_roles(role)
+                await ctx.send(f"✅ Assigned the role {role.name} to {member.mention}.")
+            except discord.Forbidden:
+                await ctx.send("❌ I do not have permission to assign roles.")
+            except discord.HTTPException as e:
+                await ctx.send(f"⚠️ Error assigning role: {e}")
+        else:
+            await ctx.send(f"❌ Role `{role_name}` not found.")
+    else:
+        await ctx.send("❌ Invalid usage. Use `..r` to list roles or `..r assign <role_name> @member` to assign a role.")
+
+@bot.command()
 async def t(ctx, member: discord.Member, duration: int):
     """
     Timeout a member for a given duration in seconds.
