@@ -21,12 +21,22 @@ async def ping(ctx):
     latency = round(bot.latency * 1000)  # Convert from seconds to milliseconds
     await ctx.send(f"{latency}ms")
 
-sniped_message = None  # Global variable to store the last deleted message
+import discord
+from discord.ext import commands
+
+intents = discord.Intents.default()
+intents.messages = True  # To detect deleted messages
+intents.message_content = True  # To read message content
+
+bot = commands.Bot(command_prefix=".", intents=intents)
+
+sniped_messages = {}  # Global variable to store deleted messages per channel
 
 @bot.event
 async def on_message_delete(message):
-    global sniped_message
-    sniped_message = message  # Save the deleted message
+    if message.author.bot:  # Ignore bot messages
+        return
+    sniped_messages[message.channel.id] = message  # Save the deleted message for the channel
 
 @bot.command()
 async def s(ctx):
@@ -49,9 +59,12 @@ async def s(ctx):
 
 @bot.command()
 async def cs(ctx):
-    global sniped_message
-    sniped_message = None  # Clear the saved message
-    await ctx.send("Sniped message cleared!")
+    if ctx.channel.id in sniped_messages:
+        del sniped_messages[ctx.channel.id]  # Clear the message for that channel
+        await ctx.send("Sniped message cleared!")
+    else:
+        await ctx.send("There's nothing to clear!")
+
 
 
 
