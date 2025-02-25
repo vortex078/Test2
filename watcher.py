@@ -23,16 +23,27 @@ async def ping(ctx):
 
 sniped_message = None  # Global variable to store the last deleted message
 
+
 @bot.event
 async def on_message_delete(message):
     global sniped_message
-    sniped_message = message  # Save the deleted message
+    if message.content:  # Only store if there's actual content
+        sniped_message = message  
 
 @bot.command()
 async def s(ctx):
     global sniped_message
     if sniped_message:
-        await ctx.send(f"**{sniped_message.author}:** {sniped_message.content}")
+        embed = discord.Embed(
+            title="Sniped Message",
+            description=sniped_message.content,
+            color=discord.Color.red(),
+            timestamp=sniped_message.created_at
+        )
+        embed.set_author(name=sniped_message.author, icon_url=sniped_message.author.avatar.url if sniped_message.author.avatar else None)
+        embed.set_footer(text=f"Deleted in #{sniped_message.channel.name}")
+        
+        await ctx.send(embed=embed)
     else:
         await ctx.send("No recently deleted messages found!")
 
@@ -41,6 +52,7 @@ async def cs(ctx):
     global sniped_message
     sniped_message = None  # Clear the saved message
     await ctx.send("Sniped message cleared!")
+
 
 
 # Purge Messages (.p <amount>)
