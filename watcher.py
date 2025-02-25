@@ -17,7 +17,7 @@ async def on_ready():
     print(f'Logged in as {bot.user}')
 
 @bot.command()
-async def help(ctx):
+async def Help(ctx):
     embed = discord.Embed(
         title="Bot Commands",
         description="",
