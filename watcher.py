@@ -16,6 +16,11 @@ online_users = set()
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
+@bot.command()
+async def ping(ctx):
+    latency = round(bot.latency * 1000)  # Convert from seconds to milliseconds
+    await ctx.send(f"{latency}ms")
+
 # Snipe Command (.s) - Retrieve last deleted message
 @bot.command()
 async def s(ctx):
