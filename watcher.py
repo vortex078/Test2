@@ -132,6 +132,49 @@ async def show_rules(ctx):
 
     await ctx.send(embed=embed)
 
+@bot.command(name="kick")
+@is_admin()
+async def kick(ctx, member: discord.Member = None, *, reason: str = None):
+    """Kicks a member from the server, requiring a reason."""
+    if not member or not reason:
+        await ctx.send("⚠ **Usage:** `..kick @user <reason>`\nExample: `..kick @user Spamming`")
+        return
+
+    await member.kick(reason=reason)
+    await ctx.send(f"🔨 **{member.name}** has been kicked. Reason: {reason}")
+
+
+@bot.command(name="ban")
+@is_admin()
+async def ban(ctx, member: discord.Member = None, *, reason: str = None):
+    """Bans a member from the server, requiring a reason."""
+    if not member or not reason:
+        await ctx.send("⚠ **Usage:** `..ban @user <reason>`\nExample: `..ban @user Harassment`")
+        return
+
+    await member.ban(reason=reason)
+    await ctx.send(f"🔨 **{member.name}** has been banned. Reason: {reason}")
+
+@bot.command(name="unban")
+@is_admin()
+async def unban(ctx, user: discord.User = None):
+    """Unbans a member from the server by user ID."""
+    if not user:
+        await ctx.send("⚠ **Usage:** `..unban @user` or `..unban <user_id>`")
+        return
+
+    try:
+        # Unban the user
+        await ctx.guild.unban(user)
+        await ctx.send(f"✅ **{user.name}** has been unbanned from the server.")
+    except discord.NotFound:
+        await ctx.send("⚠ This user is not banned.")
+    except discord.Forbidden:
+        await ctx.send("⚠ I do not have permission to unban this user.")
+    except Exception as e:
+        await ctx.send(f"⚠ An error occurred: {str(e)}")
+
+
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
@@ -197,6 +240,7 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
         await ctx.send("❌ Invalid usage. Use `..r` to list roles or `..r assign <role_name> @member` to assign a role.")
 
 @bot.command()
+@is_admin()
 async def t(ctx, member: discord.Member, duration: int):
     """
     Timeout a member for a given duration in seconds.
@@ -215,6 +259,7 @@ async def t(ctx, member: discord.Member, duration: int):
         await ctx.message.add_reaction("❌")  # Add red X on failure
 
 @bot.command()
+@is_admin()
 async def ut(ctx, member: discord.Member):
     """
     Untimeout a member.
