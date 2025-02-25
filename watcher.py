@@ -42,13 +42,11 @@ async def t(ctx, member: discord.Member, duration: int):
     try:
         timeout_duration = discord.utils.utcnow() + timedelta(seconds=duration)  # Set timeout duration
         await member.timeout(timeout_duration)  # Apply timeout
-        await ctx.send(f"✅ {member.mention} has been timed out for {duration} seconds.")
 
         # Add a check mark reaction to the message to indicate success
         await ctx.message.add_reaction("✅")
 
     except discord.Forbidden:
-        await ctx.send("❌ I do not have permission to timeout members.")
         await ctx.message.add_reaction("❌")  # Add red X on failure
     except discord.HTTPException as e:
         await ctx.send(f"⚠️ Error while timing out: {e}")
@@ -62,13 +60,11 @@ async def ut(ctx, member: discord.Member):
     """
     try:
         await member.timeout(None)  # Remove timeout
-        await ctx.send(f"✅ {member.mention}'s timeout has been removed.")
 
         # Add a check mark reaction to the message to indicate success
         await ctx.message.add_reaction("✅")
 
     except discord.Forbidden:
-        await ctx.send("❌ I do not have permission to untimeout members.")
         await ctx.message.add_reaction("❌")  # Add red X on failure
     except discord.HTTPException as e:
         await ctx.send(f"⚠️ Error while removing timeout: {e}")
