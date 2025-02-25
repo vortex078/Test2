@@ -144,7 +144,7 @@ async def on_message_delete(message):
 
 @bot.event
 async def on_reaction_add(reaction, user):
-    if user.bot
+    if user.bot:
         return
     
     log_message = f"""Reaction Added: {reaction.emoji} by {user.mention} in {reaction.message.channel.mention}
