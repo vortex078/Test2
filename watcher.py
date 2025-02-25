@@ -17,6 +17,26 @@ async def on_ready():
     print(f'Logged in as {bot.user}')
 
 @bot.command()
+async def help(ctx):
+    embed = discord.Embed(
+        title="Bot Commands",
+        description="",
+        color=discord.Color(0x000000)  # Black color for the embed
+    )
+    
+    embed.add_field(name="**..ping**", value="Check bot latency.", inline=False)
+    embed.add_field(name="**..s**", value="View last sniped message.", inline=False)
+    embed.add_field(name="**..cs**", value="Clear last sniped message.", inline=False)
+    embed.add_field(name="**..p <amount>**", value="Purge messages.", inline=False)
+    embed.add_field(name="**..l**", value="Lock channel.", inline=False)
+    embed.add_field(name="**..ul**", value="Unlock channel.", inline=False)
+    embed.add_field(name="**..add <member>**", value="Add member to watchlist.", inline=False)
+    embed.add_field(name="**..rem <member>**", value="Remove member from watchlist.", inline=False)
+    embed.add_field(name="**..test**", value="Test DM to bot owner.", inline=False)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
 async def ping(ctx):
     latency = round(bot.latency * 1000)  # Convert from seconds to milliseconds
     await ctx.send(f"{latency}ms")
