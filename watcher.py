@@ -154,9 +154,9 @@ async def s(ctx):
 async def cs(ctx):
     if ctx.channel.id in sniped_messages:
         del sniped_messages[ctx.channel.id]  # Clear the message for that channel
-        await ctx.send("Cleared!")
+        await ctx.message.add_reaction("✅")
     else:
-        await ctx.send("There's nothing to clear!")
+        await ctx.message.add_reaction("❌")
 
         
 @bot.command()
