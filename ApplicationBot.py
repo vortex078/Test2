@@ -75,31 +75,31 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-    if message.author != bot.user:
-        for mention in message.mentions:
-            mentioned_user_id = str(mention.id)
-            if mentioned_user_id in afk_message:
-                afk_reason = afk_message[mentioned_user_id]
-                await message.channel.send(f"`{mention.name}` Is AFK: {afk_reason}")
+    # if message.author != bot.user:
+     #   for mention in message.mentions:
+        #    mentioned_user_id = str(mention.id)
+       #     if mentioned_user_id in afk_message:
+        #        afk_reason = afk_message[mentioned_user_id]
+        #        await message.channel.send(f"`{mention.name}` Is AFK: {afk_reason}")
 
-    user_id = str(message.author.id)
+   # user_id = str(message.author.id)
 
-    if user_id in afk_message:
-        if user_id not in afk_message_count:
-            afk_message_count[user_id] = 0
+   # if user_id in afk_message:
+   #     if user_id not in afk_message_count:
+    #        afk_message_count[user_id] = 0
 
-    if user_id in afk_message_count and afk_message_count[user_id] < 3:
-        afk_message_count[user_id] += 1
-        print(f"AFK message count: {afk_message_count[user_id]}")
-        await asyncio.sleep(delay=None)
-    else:
-        await message.channel.send(f"Welcome back, {message.author.mention}! I've removed your AFK status.")
-        del afk_message[user_id]
-        with open(afk_file, "w") as f:
-            json.dump(afk_message, f)
-            del afk_message_count[user_id]
+   # if user_id in afk_message_count and afk_message_count[user_id] < 3:
+  #      afk_message_count[user_id] += 1
+   #     print(f"AFK message count: {afk_message_count[user_id]}")
+  #      await asyncio.sleep(delay=None)
+   # else:
+   #     await message.channel.send(f"Welcome back, {message.author.mention}! I've removed your AFK status.")
+   #     del afk_message[user_id]
+    #    with open(afk_file, "w") as f:
+     #       json.dump(afk_message, f)
+     #       del afk_message_count[user_id]
 
-    await bot.process_commands(message)
+   # await bot.process_commands(message)
 
 @bot.event
 async def on_message_edit(before, after):
