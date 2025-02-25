@@ -197,6 +197,7 @@ async def warn(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.send(f"❌ Cannot DM {member.mention}")
 
 @bot.command()
+@is_admin()
 async def d(ctx):
     """
     Deletes the message that you reply to, and reacts with ✅ if successful, ❌ if not.
@@ -272,6 +273,7 @@ async def help_command(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+@is_admin()
 async def r(ctx, action: str = None, role_name: str = None, member: discord.Member = None):
     """
     Display all roles or assign roles to a member.
