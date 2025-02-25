@@ -65,6 +65,11 @@ async def s(ctx):
         embed.set_author(name=sniped_message.author, icon_url=sniped_message.author.avatar.url if sniped_message.author.avatar else None)
         embed.set_footer(text=f"Deleted in #{sniped_message.channel.name}")
 
+        # Check if there are attachments, and if so, add them to the embed
+        if sniped_message.attachments:
+            attachment = sniped_message.attachments[0]  # Get the first attachment
+            embed.set_image(url=attachment.url)  # Display the attachment image in the embed
+
         await ctx.send(embed=embed)
     else:
         await ctx.send("Nothing found.")
@@ -76,6 +81,7 @@ async def cs(ctx):
         await ctx.send("Cleared!")
     else:
         await ctx.send("There's nothing to clear!")
+
         
 @bot.command()
 @commands.has_permissions(manage_messages=True)
