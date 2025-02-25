@@ -201,20 +201,43 @@ async def warn(ctx, member: discord.Member = None, *, reason: str = None):
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
-@bot.command()
-async def Help(ctx):
+@bot.command(name="Help")
+async def help_command(ctx):
+    """Displays all available bot commands."""
+    description = "Here are the available commands:\n"
+
+    # General commands
+    description += "\n`..info`: Displays the current server info."
+    description += "\n`..ping`: Latency check"
+
+    # Admin commands (for admins)
+    if ctx.author.id in admins:
+        description += "\n`..set <text>`: Sets the server info."
+        description += "\n`..edit <text>`: Edits the existing info."
+        description += "\n`..del`: Deletes the stored server indo."
+        description += "\n`..kick @user <reason>`: Kicks user with reason."
+        description += "\n`..ban @user <reason>`: Bans user with reason."
+        description += "\n`..unban @user`: Un-bans user."
+        description += "\n`..t @user <length>`: Times-out member."
+        description += "\n`..ut @user`: Removes time-out from member."
+        description += "\n`..p <amount>`: Purges messages"
+        description += "\n`..s `: Snipes message"
+        description += "\n`..cs `: Clears sniped message"
+        description += "\n`..r `: Lists roles"
+        description += "\n`..r assign <role_name> @user`: Gives role"
+        description += "\n`..warn @user <auto>`: Warns user."
+        description += "\n`..listadmins`: Lists all current admins."
+
+    # Owner-specific commands (for the bot owner)
+    if ctx.author.id == OWNER_ID:
+        description += "\n`..addadmin @user`: Adds a new admin."
+        description += "\n`..removeadmin @user`: Removes an admin."
+
     embed = discord.Embed(
         title="Bot Commands",
-        description="",
-        color=discord.Color(0x000000)  # Black color for the embed
+        description=description,
+        color=discord.Color.from_rgb(0, 0, 0)
     )
-    
-    embed.add_field(name="**..ping**", value="Check bot latency.", inline=False)
-    embed.add_field(name="**..s**", value="View last sniped message.", inline=False)
-    embed.add_field(name="**..cs**", value="Clear last sniped message.", inline=False)
-    embed.add_field(name="**..p <amount>**", value="Purge messages.", inline=False)
-    embed.add_field(name="**..l**", value="Lock channel.", inline=False)
-    embed.add_field(name="**..ul**", value="Unlock channel.", inline=False)
 
     await ctx.send(embed=embed)
 
