@@ -30,11 +30,22 @@ async def on_message_delete(message):
 
 @bot.command()
 async def s(ctx):
-    global sniped_message
-    if sniped_message:
-        await ctx.send(f"**{sniped_message.author}:** {sniped_message.content}")
+    if ctx.channel.id in sniped_messages:
+        sniped_message = sniped_messages[ctx.channel.id]
+
+        # Create embed to display the sniped message
+        embed = discord.Embed(
+            title="Sniped Message",
+            description=sniped_message.content if sniped_message.content else "*[No Text]*",
+            color=discord.Color.red(),
+            timestamp=sniped_message.created_at
+        )
+        embed.set_author(name=sniped_message.author, icon_url=sniped_message.author.avatar.url if sniped_message.author.avatar else None)
+        embed.set_footer(text=f"Deleted in #{sniped_message.channel.name}")
+
+        await ctx.send(embed=embed)
     else:
-        await ctx.send("No recently deleted messages found!")
+        await ctx.send("No recently deleted messages found in this channel!")
 
 @bot.command()
 async def cs(ctx):
