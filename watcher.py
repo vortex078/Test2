@@ -8,7 +8,7 @@ intents.messages = True
 intents.message_content = True
 intents.presences = True
 
-bot = commands.Bot(command_prefix="w.", intents=intents)
+bot = commands.Bot(command_prefix="..", intents=intents)
 watched_users = set()
 online_users = set()
 
