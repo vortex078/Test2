@@ -21,28 +21,27 @@ async def ping(ctx):
     latency = round(bot.latency * 1000)  # Convert from seconds to milliseconds
     await ctx.send(f"{latency}ms")
 
-# Snipe Command (.s) - Retrieve last deleted message
+sniped_message = None  # Global variable to store the last deleted message
+
+@bot.event
+async def on_message_delete(message):
+    global sniped_message
+    sniped_message = message  # Save the deleted message
+
 @bot.command()
 async def s(ctx):
     global sniped_message
     if sniped_message:
-        await ctx.send(f"**Sniped Message:**\n👤 {sniped_message['author']}:\n📜 {sniped_message['content']}")
+        await ctx.send(f"**{sniped_message.author}:** {sniped_message.content}")
     else:
-        await ctx.send("❌ No recently deleted messages found.")
+        await ctx.send("No recently deleted messages found!")
 
-# Clear Sniped Message (.cs)
 @bot.command()
 async def cs(ctx):
     global sniped_message
-    sniped_message = None
-    await ctx.send("✅ Cleared sniped message from memory.")
+    sniped_message = None  # Clear the saved message
+    await ctx.send("Sniped message cleared!")
 
-# Store Deleted Messages
-@bot.event
-async def on_message_delete(message):
-    global sniped_message
-    if not message.author.bot:  # Ignore bot messages
-        sniped_message = {"author": message.author.name, "content": message.content}
 
 # Purge Messages (.p <amount>)
 @bot.command()
