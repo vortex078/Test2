@@ -21,38 +21,39 @@ async def ping(ctx):
     latency = round(bot.latency * 1000)  # Convert from seconds to milliseconds
     await ctx.send(f"{latency}ms")
 
-sniped_message = None  # Global variable to store the last deleted message
-
+sniped_messages = {}  # Dictionary to store deleted messages per channel
 
 @bot.event
 async def on_message_delete(message):
-    global sniped_message
-    if message.content:  # Only store if there's actual content
-        sniped_message = message  
+    if message.author.bot:  # Ignore bot messages
+        return
+    sniped_messages[message.channel.id] = message  # Save the deleted message
 
 @bot.command()
 async def s(ctx):
-    global sniped_message
-    if sniped_message:
+    if ctx.channel.id in sniped_messages:
+        sniped_message = sniped_messages[ctx.channel.id]
+
         embed = discord.Embed(
             title="Sniped Message",
-            description=sniped_message.content,
+            description=sniped_message.content if sniped_message.content else "*[No Text]*",
             color=discord.Color.red(),
             timestamp=sniped_message.created_at
         )
         embed.set_author(name=sniped_message.author, icon_url=sniped_message.author.avatar.url if sniped_message.author.avatar else None)
         embed.set_footer(text=f"Deleted in #{sniped_message.channel.name}")
-        
+
         await ctx.send(embed=embed)
     else:
-        await ctx.send("No recently deleted messages found!")
+        await ctx.send("No recently deleted messages found in this channel!")
 
 @bot.command()
 async def cs(ctx):
-    global sniped_message
-    sniped_message = None  # Clear the saved message
-    await ctx.send("Sniped message cleared!")
-
+    if ctx.channel.id in sniped_messages:
+        del sniped_messages[ctx.channel.id]  # Clear the message for that channel
+        await ctx.send("Sniped message cleared!")
+    else:
+        await ctx.send("There's nothing to clear!")
 
 
 # Purge Messages (.p <amount>)
