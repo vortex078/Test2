@@ -34,7 +34,6 @@ async def Help(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.has_permissions(manage_members=True)
 async def t(ctx, member: discord.Member, duration: int):
     """
     Timeout a member for a given duration in seconds.
