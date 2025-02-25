@@ -28,6 +28,7 @@ async def on_message_delete(message):
     if message.author.bot:  # Ignore bot messages
         return
     sniped_messages[message.channel.id] = message  # Save the deleted message for the channel
+    print(f"Deleted message in {message.channel.name}: {message.content}")  # Debugging line to confirm deletion is detected
 
 @bot.command()
 async def s(ctx):
@@ -55,7 +56,6 @@ async def cs(ctx):
         await ctx.send("Sniped message cleared!")
     else:
         await ctx.send("There's nothing to clear!")
-
 # Purge Messages (.p <amount>)
 @bot.command()
 @commands.has_permissions(manage_messages=True)
