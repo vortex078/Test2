@@ -39,7 +39,7 @@ async def s(ctx):
         embed = discord.Embed(
             title="Sniped Message",
             description=sniped_message.content if sniped_message.content else "*[No Text]*",
-            color=discord.Color.red(),
+            color=discord.Color(0x000000),
             timestamp=sniped_message.created_at
         )
         embed.set_author(name=sniped_message.author, icon_url=sniped_message.author.avatar.url if sniped_message.author.avatar else None)
