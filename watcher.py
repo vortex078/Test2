@@ -47,13 +47,13 @@ async def s(ctx):
 
         await ctx.send(embed=embed)
     else:
-        await ctx.send("No recently deleted messages found in this channel!")
+        await ctx.send("Nothing found.")
 
 @bot.command()
 async def cs(ctx):
     if ctx.channel.id in sniped_messages:
         del sniped_messages[ctx.channel.id]  # Clear the message for that channel
-        await ctx.send("Sniped message cleared!")
+        await ctx.send("Cleared!")
     else:
         await ctx.send("There's nothing to clear!")
         
