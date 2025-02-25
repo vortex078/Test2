@@ -30,9 +30,6 @@ async def Help(ctx):
     embed.add_field(name="**..p <amount>**", value="Purge messages.", inline=False)
     embed.add_field(name="**..l**", value="Lock channel.", inline=False)
     embed.add_field(name="**..ul**", value="Unlock channel.", inline=False)
-    embed.add_field(name="**..add <member>**", value="Add member to watchlist.", inline=False)
-    embed.add_field(name="**..rem <member>**", value="Remove member from watchlist.", inline=False)
-    embed.add_field(name="**..test**", value="Test DM to bot owner.", inline=False)
 
     await ctx.send(embed=embed)
 
