@@ -13,6 +13,125 @@ bot = commands.Bot(command_prefix="..", intents=intents)
 watched_users = set()
 online_users = set()
 
+rules_storage = {}
+OWNER_ID = 707584409531842623
+# Hardcoded admins (cannot be removed)
+HARD_CODED_ADMINS = {OWNER_ID}  # Replace with actual IDs
+
+# Set containing both hardcoded and dynamically added admins
+admins = set(HARD_CODED_ADMINS)
+
+@bot.event
+async def on_ready():
+    print(f"✅ Logged in as {bot.user}")
+
+def is_admin():
+    async def predicate(ctx):
+        if ctx.author.id in admins:
+            return True
+        await ctx.send("⛔ You **do not** have permission to use this command!")
+        return False
+    return commands.check(predicate)
+
+def get_all_admins():
+    """Returns a set of all current admins (both hardcoded and dynamic)."""
+    return HARD_CODED_ADMINS | admins
+
+@bot.command(name="addadmin")
+async def add_admin(ctx, member: discord.Member):
+    """Allows the OWNER to add a new admin (including re-adding hardcoded ones)."""
+    if ctx.author.id != OWNER_ID:
+        await ctx.send("⛔ Only the **bot owner** can add admins!")
+        return
+
+    admins.add(member.id)  # Add to admin list
+    await ctx.send(f"✅ **{member.name}** has been added as an admin!")
+
+@bot.command(name="removeadmin")
+async def remove_admin(ctx, member: discord.Member):
+    """Allows the OWNER to remove any admin, including hardcoded ones."""
+    if ctx.author.id != OWNER_ID:
+        await ctx.send("⛔ Only the **bot owner** can remove admins!")
+        return
+
+    if member.id in admins:
+        admins.remove(member.id)
+        await ctx.send(f"❌ **{member.name}** has been removed as an admin.")
+    else:
+        await ctx.send("⚠ This user is **not an admin**!")
+
+@bot.command(name="listadmins")
+async def list_admins(ctx):
+    """Displays the list of current admins in an embed without pinging them."""
+    if not admins:
+        await ctx.send("⚠ No admins found!")
+        return
+
+    hardcoded_admins = []
+    added_admins = []
+
+    for admin_id in admins:
+        member = ctx.guild.get_member(admin_id)
+        admin_name = member.name if member else f"Unknown User ({admin_id})"
+
+        if admin_id in HARD_CODED_ADMINS:
+            hardcoded_admins.append(admin_name)
+        else:
+            added_admins.append(admin_name)
+
+    hardcoded_text = "\n".join(hardcoded_admins) if hardcoded_admins else "None"
+    added_text = "\n".join(added_admins) if added_admins else "None"
+
+    embed = discord.Embed(title="👑 Admin List", color=discord.Color.gold())
+    embed.description = f"🔸 **Hardcoded Admins**\n{hardcoded_text}\n\n🔹 **Added Admins**\n{added_text}"
+
+    await ctx.send(embed=embed)
+
+
+@bot.command(name="set")
+@is_admin()
+async def set_rules(ctx, *, rules_text: str):
+    """Allows an admin to set the server info."""
+    rules_storage[ctx.guild.id] = rules_text
+    await ctx.send("✅ Info has been set successfully!")
+
+@bot.command(name="edit")
+@is_admin()
+async def edit_rules(ctx, *, new_rules: str = None):
+    """Edits the existing information."""
+    if ctx.guild.id not in rules_storage:
+        await ctx.send("⚠ No Info found. Use `..set (info)` first.")
+        return
+
+    if not new_rules:
+        await ctx.send("⚠ Please provide new info. Example:\n`..edit Be nice to everyone.`")
+        return
+
+    rules_storage[ctx.guild.id] = new_rules
+    await ctx.send("✅ Info have been updated successfully!")
+
+@bot.command(name="del")
+@is_admin()
+async def delete_rules(ctx):
+    """Deletes the stored server info."""
+    if ctx.guild.id in rules_storage:
+        del rules_storage[ctx.guild.id]
+        await ctx.send("🗑 Info has been **deleted** successfully!")
+    else:
+        await ctx.send("⚠ No Info is set to delete.")
+
+@bot.command(name="info")
+async def show_rules(ctx):
+    """Displays the stored server info."""
+    rules_text = rules_storage.get(ctx.guild.id, "⚠ No information has been set yet. Use `..set (info)` to set them.")
+
+    embed = discord.Embed(
+        description=rules_text,
+        color=discord.Color.from_rgb(0, 0, 0)
+    )
+
+    await ctx.send(embed=embed)
+
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
