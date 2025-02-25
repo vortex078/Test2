@@ -204,7 +204,7 @@ async def on_ready():
 @bot.command(name="Help")
 async def help_command(ctx):
     """Displays all available bot commands."""
-    description = "Here are the available commands:\n"
+    description = "H"
 
     # General commands
     description += "\n`..info`: Displays the current server info."
