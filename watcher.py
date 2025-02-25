@@ -34,6 +34,47 @@ async def Help(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.has_permissions(manage_members=True)
+async def t(ctx, member: discord.Member, duration: int):
+    """
+    Timeout a member for a given duration in seconds.
+    """
+    try:
+        timeout_duration = discord.utils.utcnow() + timedelta(seconds=duration)  # Set timeout duration
+        await member.timeout(timeout_duration)  # Apply timeout
+        await ctx.send(f"✅ {member.mention} has been timed out for {duration} seconds.")
+
+        # Add a check mark reaction to the message to indicate success
+        await ctx.message.add_reaction("✅")
+
+    except discord.Forbidden:
+        await ctx.send("❌ I do not have permission to timeout members.")
+        await ctx.message.add_reaction("❌")  # Add red X on failure
+    except discord.HTTPException as e:
+        await ctx.send(f"⚠️ Error while timing out: {e}")
+        await ctx.message.add_reaction("❌")  # Add red X on failure
+
+@bot.command()
+@commands.has_permissions(manage_members=True)
+async def ut(ctx, member: discord.Member):
+    """
+    Untimeout a member.
+    """
+    try:
+        await member.timeout(None)  # Remove timeout
+        await ctx.send(f"✅ {member.mention}'s timeout has been removed.")
+
+        # Add a check mark reaction to the message to indicate success
+        await ctx.message.add_reaction("✅")
+
+    except discord.Forbidden:
+        await ctx.send("❌ I do not have permission to untimeout members.")
+        await ctx.message.add_reaction("❌")  # Add red X on failure
+    except discord.HTTPException as e:
+        await ctx.send(f"⚠️ Error while removing timeout: {e}")
+        await ctx.message.add_reaction("❌")  # Add red X on failure
+
+@bot.command()
 async def ping(ctx):
     latency = round(bot.latency * 1000)  # Convert from seconds to milliseconds
     await ctx.send(f"{latency}ms")
