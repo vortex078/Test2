@@ -21,15 +21,6 @@ async def ping(ctx):
     latency = round(bot.latency * 1000)  # Convert from seconds to milliseconds
     await ctx.send(f"{latency}ms")
 
-import discord
-from discord.ext import commands
-
-intents = discord.Intents.default()
-intents.messages = True  # To detect deleted messages
-intents.message_content = True  # To read message content
-
-bot = commands.Bot(command_prefix=".", intents=intents)
-
 sniped_message = None  # Global variable to store the last deleted message
 
 @bot.event
