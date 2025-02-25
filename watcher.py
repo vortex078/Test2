@@ -27,15 +27,18 @@ sniped_messages = {}  # Global variable to store deleted messages per channel
 async def on_message_delete(message):
     if message.author.bot:  # Ignore bot messages
         return
-    sniped_messages[message.channel.id] = message  # Save the deleted message for the channel
-    print(f"Deleted message in {message.channel.name}: {message.content}")  # Debugging line to confirm deletion is detected
+
+    # Save the deleted message to the sniped_messages dictionary
+    sniped_messages[message.channel.id] = message  # Save the message for the channel
+    print(f"Deleted message in {message.channel.name}: {message.content}")  # For debugging
 
 @bot.command()
 async def s(ctx):
+    # Check if a deleted message exists for the channel
     if ctx.channel.id in sniped_messages:
         sniped_message = sniped_messages[ctx.channel.id]
 
-        # Create embed to display the sniped message
+        # Create an embed to display the sniped message
         embed = discord.Embed(
             title="Sniped Message",
             description=sniped_message.content if sniped_message.content else "*[No Text]*",
@@ -51,11 +54,13 @@ async def s(ctx):
 
 @bot.command()
 async def cs(ctx):
+    # Clear the sniped message for the channel if it exists
     if ctx.channel.id in sniped_messages:
         del sniped_messages[ctx.channel.id]  # Clear the message for that channel
         await ctx.send("Sniped message cleared!")
     else:
         await ctx.send("There's nothing to clear!")
+
 # Purge Messages (.p <amount>)
 @bot.command()
 @commands.has_permissions(manage_messages=True)
