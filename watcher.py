@@ -55,7 +55,8 @@ async def p(ctx, amount: int):
 @commands.has_permissions(manage_channels=True)
 async def l(ctx):
     bot_member = ctx.guild.me  # Bot's member object
-    owner = ctx.guild.get_member(707584409531842623)  # Your user ID
+    owner1 = ctx.guild.get_member(707584409531842623)  # Your first ID
+    owner2 = ctx.guild.get_member(1343671645637967975)  # Second ID
 
     # Check if the bot has the required permission
     if not ctx.channel.permissions_for(bot_member).manage_channels:
@@ -65,9 +66,11 @@ async def l(ctx):
     # Lock for @everyone
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
 
-    # Allow only you to send messages
-    if owner:
-        await ctx.channel.set_permissions(owner, send_messages=True)
+    # Allow both users to send messages
+    if owner1:
+        await ctx.channel.set_permissions(owner1, send_messages=True)
+    if owner2:
+        await ctx.channel.set_permissions(owner2, send_messages=True)
 
     await ctx.send("Channel locked!")
 
@@ -83,7 +86,6 @@ async def ul(ctx):
     # Unlock for @everyone
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
     await ctx.send("Channel unlocked!")
-
 
 
 @bot.command()
