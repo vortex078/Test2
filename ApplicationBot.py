@@ -68,6 +68,8 @@ async def set_logging_channel(ctx, channel: discord.TextChannel):
 
 @bot.event
 async def on_message(message):
+    if message.author.bot
+        return
     global afk_message
     global afk_message_count
 
@@ -142,6 +144,9 @@ async def on_message_delete(message):
 
 @bot.event
 async def on_reaction_add(reaction, user):
+    if user.bot
+        return
+    
     log_message = f"""Reaction Added: {reaction.emoji} by {user.mention} in {reaction.message.channel.mention}
 [Jump to Message]({reaction.message.jump_url})"""
     await log_event(reaction.message.guild, log_message, "Reaction Added", discord.Color.green())
@@ -180,11 +185,17 @@ async def on_guild_channel_delete(channel):
 
 @bot.event
 async def on_member_ban(guild, user):
+    if user.bot:
+        return
+    
     log_message = f"User Banned: {user.mention} banned from the server"
     await log_event(guild, log_message, "User Banned", discord.Color.dark_red())
 
 @bot.event
 async def on_member_unban(guild, user):
+    if user.bot:
+        return
+    
     log_message = f"User Unbanned: {user.mention} unbanned from the server"
     await log_event(guild, log_message, "User Unbanned", discord.Color.green())
 
