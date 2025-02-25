@@ -174,6 +174,29 @@ async def unban(ctx, user: discord.User = None):
     except Exception as e:
         await ctx.send(f"⚠ An error occurred: {str(e)}")
 
+@bot.command()
+@is_admin()
+@commands.has_permissions(kick_members=True)  # You can adjust this if you want different permissions
+async def warn(ctx, member: discord.Member = None, *, reason: str = None):
+    """
+    Warns a member and DMs them the reason.
+    Usage: ..warn @member <reason>
+    """
+    if member is None:
+        await ctx.send("❌ Provide member.")
+        return
+    if reason is None:
+        await ctx.send("❌ Provide reason.")
+        return
+
+    try:
+        # Send a DM to the member with the warning reason
+        await member.send(f"You have been warned in {ctx.guild.name}.\nReason: {reason}")
+        await ctx.send(f"✅ {member.mention} Warned! Reason: {reason}")
+    except discord.Forbidden:
+        # If the bot cannot DM the user, inform the command executor
+        await ctx.send(f"❌ Cannot DM {member.mention}")
+
 
 @bot.event
 async def on_ready():
