@@ -51,19 +51,23 @@ async def p(ctx, amount: int):
     await ctx.channel.purge(limit=amount + 1)
     await ctx.send(f"✅ Deleted {amount} messages.", delete_after=3)
 
-# Lock Channel (.l)
 @bot.command()
 @commands.has_permissions(manage_channels=True)
 async def l(ctx):
+    # Lock channel for @everyone but keep access for you
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
+    owner = ctx.guild.get_member(707584409531842623)  # Your user ID
+    if owner:
+        await ctx.channel.set_permissions(owner, send_messages=True)  # Allow you to send messages
     await ctx.send("🔒 Channel locked!")
 
-# Unlock Channel (.ul)
 @bot.command()
 @commands.has_permissions(manage_channels=True)
 async def ul(ctx):
+    # Unlock channel for @everyone
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
     await ctx.send("🔓 Channel unlocked!")
+
 
 @bot.command()
 async def add(ctx, member: discord.Member = None):
