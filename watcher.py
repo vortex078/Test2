@@ -196,6 +196,35 @@ async def warn(ctx, member: discord.Member = None, *, reason: str = None):
         # If the bot cannot DM the user, inform the command executor
         await ctx.send(f"❌ Cannot DM {member.mention}")
 
+@bot.command()
+async def d(ctx):
+    """
+    Deletes the message that you reply to, and reacts with ✅ if successful, ❌ if not.
+    """
+    if not ctx.message.reference:
+        await ctx.send("❌ You need to reply to a message to delete it.")
+        return
+
+    # Get the message that is being replied to
+    message_to_delete = ctx.message.reference.resolved
+
+    if message_to_delete.author == bot.user:
+        await ctx.send("❌ You cannot delete my own messages!")
+        return
+
+    try:
+        # Delete the message
+        await message_to_delete.delete()
+
+        # React with ✅ on the original message
+        await ctx.message.add_reaction("✅")
+    except discord.Forbidden:
+        await ctx.send("❌ I do not have permission to delete messages.")
+        await ctx.message.add_reaction("❌")
+    except discord.HTTPException as e:
+        await ctx.send(f"❌ Error deleting message: {e}")
+        await ctx.message.add_reaction("❌")
+
 
 @bot.event
 async def on_ready():
