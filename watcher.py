@@ -56,12 +56,16 @@ async def cs(ctx):
         await ctx.send("Sniped message cleared!")
     else:
         await ctx.send("There's nothing to clear!")
-# Purge Messages (.p <amount>)
+        
 @bot.command()
 @commands.has_permissions(manage_messages=True)
-async def p(ctx, amount: int):
+async def p(ctx, amount: int = None):
+    if amount is None:
+        await ctx.send("❌ State amount.", delete_after=5)
+        return
     await ctx.channel.purge(limit=amount + 1)
-    await ctx.send(f"✅ Deleted {amount} messages.", delete_after=3)
+    await ctx.send(f"✅", delete_after=3)
+
 
 @bot.command()
 @commands.has_permissions(manage_channels=True)
