@@ -176,7 +176,6 @@ async def unban(ctx, user: discord.User = None):
 
 @bot.command()
 @is_admin()
-@commands.has_permissions(kick_members=True)  # You can adjust this if you want different permissions
 async def warn(ctx, member: discord.Member = None, *, reason: str = None):
     """
     Warns a member and DMs them the reason.
