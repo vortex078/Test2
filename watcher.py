@@ -16,6 +16,50 @@ online_users = set()
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
+# Snipe Command (.s) - Retrieve last deleted message
+@bot.command()
+async def s(ctx):
+    global sniped_message
+    if sniped_message:
+        await ctx.send(f"**Sniped Message:**\n👤 {sniped_message['author']}:\n📜 {sniped_message['content']}")
+    else:
+        await ctx.send("❌ No recently deleted messages found.")
+
+# Clear Sniped Message (.cs)
+@bot.command()
+async def cs(ctx):
+    global sniped_message
+    sniped_message = None
+    await ctx.send("✅ Cleared sniped message from memory.")
+
+# Store Deleted Messages
+@bot.event
+async def on_message_delete(message):
+    global sniped_message
+    if not message.author.bot:  # Ignore bot messages
+        sniped_message = {"author": message.author.name, "content": message.content}
+
+# Purge Messages (.p <amount>)
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def p(ctx, amount: int):
+    await ctx.channel.purge(limit=amount + 1)
+    await ctx.send(f"✅ Deleted {amount} messages.", delete_after=3)
+
+# Lock Channel (.l)
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def l(ctx):
+    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
+    await ctx.send("🔒 Channel locked!")
+
+# Unlock Channel (.ul)
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def ul(ctx):
+    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
+    await ctx.send("🔓 Channel unlocked!")
+
 @bot.command()
 async def add(ctx, member: discord.Member = None):
     if member is None:
