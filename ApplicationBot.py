@@ -86,7 +86,7 @@ async def on_message(message):
         if user_id not in afk_message_count:
             afk_message_count[user_id] = 0
 
-    if afk_message_count[user_id] != nil and afk_message_count[user_id] < 3:
+    if afk_message_count[user_id] < 3:
         afk_message_count[user_id] += 1
         print(f"AFK message count: {afk_message_count[user_id]}")
         await asyncio.sleep(delay=None)
