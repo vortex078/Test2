@@ -72,7 +72,7 @@ async def l(ctx):
     if owner2:
         await ctx.channel.set_permissions(owner2, send_messages=True)
 
-    await ctx.send("Channel locked!")
+    await ctx.send("🔒 Channel locked!")
 
 @bot.command()
 @commands.has_permissions(manage_channels=True)
@@ -85,7 +85,7 @@ async def ul(ctx):
 
     # Unlock for @everyone
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
-    await ctx.send("Channel unlocked!")
+    await ctx.send("🔓 Channel unlocked!")
 
 
 @bot.command()
