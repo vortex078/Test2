@@ -54,19 +54,36 @@ async def p(ctx, amount: int):
 @bot.command()
 @commands.has_permissions(manage_channels=True)
 async def l(ctx):
-    # Lock channel for @everyone but keep access for you
-    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
+    bot_member = ctx.guild.me  # Bot's member object
     owner = ctx.guild.get_member(707584409531842623)  # Your user ID
+
+    # Check if the bot has the required permission
+    if not ctx.channel.permissions_for(bot_member).manage_channels:
+        await ctx.send("❌ I don't have permission to manage this channel!")
+        return
+    
+    # Lock for @everyone
+    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
+
+    # Allow only you to send messages
     if owner:
-        await ctx.channel.set_permissions(owner, send_messages=True)  # Allow you to send messages
-    await ctx.send("🔒 Channel locked!")
+        await ctx.channel.set_permissions(owner, send_messages=True)
+
+    await ctx.send("Channel locked!")
 
 @bot.command()
 @commands.has_permissions(manage_channels=True)
 async def ul(ctx):
-    # Unlock channel for @everyone
+    bot_member = ctx.guild.me
+
+    if not ctx.channel.permissions_for(bot_member).manage_channels:
+        await ctx.send("❌ I don't have permission to manage this channel!")
+        return
+
+    # Unlock for @everyone
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
-    await ctx.send("🔓 Channel unlocked!")
+    await ctx.send("Channel unlocked!")
+
 
 
 @bot.command()
