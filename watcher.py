@@ -93,7 +93,7 @@ async def list_admins(ctx):
 async def set_rules(ctx, *, rules_text: str):
     """Allows an admin to set the server info."""
     rules_storage[ctx.guild.id] = rules_text
-    await ctx.send("✅ Info has been set successfully!")
+    await ctx.message.add_reaction("✅")
 
 @bot.command(name="edit")
 @is_admin()
@@ -104,11 +104,11 @@ async def edit_rules(ctx, *, new_rules: str = None):
         return
 
     if not new_rules:
-        await ctx.send("⚠ Please provide new info. Example:\n`..edit Be nice to everyone.`")
+        await ctx.send("⚠ Please provide new info.")
         return
 
     rules_storage[ctx.guild.id] = new_rules
-    await ctx.send("✅ Info have been updated successfully!")
+    await ctx.message.add_reaction("✅")
 
 @bot.command(name="del")
 @is_admin()
@@ -116,9 +116,9 @@ async def delete_rules(ctx):
     """Deletes the stored server info."""
     if ctx.guild.id in rules_storage:
         del rules_storage[ctx.guild.id]
-        await ctx.send("🗑 Info has been **deleted** successfully!")
+        await ctx.message.add_reaction("✅")
     else:
-        await ctx.send("⚠ No Info is set to delete.")
+        await ctx.message.add_reaction("❌")
 
 @bot.command(name="info")
 async def show_rules(ctx):
