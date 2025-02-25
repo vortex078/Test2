@@ -68,7 +68,7 @@ async def set_logging_channel(ctx, channel: discord.TextChannel):
 
 @bot.event
 async def on_message(message):
-    if message.author.bot
+    if message.author.bot:
         return
     global afk_message
     global afk_message_count
