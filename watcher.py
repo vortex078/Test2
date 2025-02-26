@@ -146,7 +146,7 @@ async def show_rules(ctx):
     )
 
     await ctx.send(embed=embed)
-    await asyncio.sleep(3)
+    await asyncio.sleep(0)
     await ctx.message.delete() 
 
 @bot.command(name="kick")
