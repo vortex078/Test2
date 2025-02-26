@@ -3,6 +3,7 @@ import asyncio
 from discord.ext import commands  # type: ignore
 from datetime import timedelta
 import random
+import time
 
 intents = discord.Intents.default()
 intents.members = True
@@ -92,8 +93,9 @@ afk_users = {}
 
 @bot.command()
 async def afk(ctx, *, reason: str = "AFK"):
-    """Sets a user as AFK with a reason."""
-    afk_users[ctx.author.id] = reason
+    """Sets a user as AFK with a reason and time."""
+    # Store the time when AFK is set
+    afk_users[ctx.author.id] = {"reason": reason, "time": time.time()}
 
     embed = discord.Embed(
         description=f"✅ {ctx.author.mention}: You're now AFK with the status: **{reason}**",
@@ -105,7 +107,15 @@ async def afk(ctx, *, reason: str = "AFK"):
 async def on_message(message):
     """Checks if an AFK user sends a message or is mentioned."""
     if message.author.id in afk_users:
+        # Calculate how long ago the user set their AFK status
+        afk_time = afk_users[message.author.id]["time"]
+        time_ago = time.time() - afk_time
+        minutes = int(time_ago // 60)
+        seconds = int(time_ago % 60)
+        
+        # Remove the AFK status when the user sends a message
         del afk_users[message.author.id]
+        
         embed = discord.Embed(
             description=f"✅ {message.author.mention}, you're no longer AFK.",
             color=discord.Color.from_rgb(0, 0, 0)
@@ -114,9 +124,16 @@ async def on_message(message):
 
     for mention in message.mentions:
         if mention.id in afk_users:
-            reason = afk_users[mention.id]
+            reason = afk_users[mention.id]["reason"]
+            # Calculate how long ago the AFK was set for the mentioned user
+            afk_time = afk_users[mention.id]["time"]
+            time_ago = time.time() - afk_time
+            minutes = int(time_ago // 60)
+            seconds = int(time_ago % 60)
+            time_display = f"{minutes} minutes and {seconds} seconds ago"
+
             embed = discord.Embed(
-                description=f":warning: {mention.mention} is AFK: **{reason}**",
+                description=f":warning: {mention.mention} is AFK: **{reason}** (AFK set {time_display})",
                 color=discord.Color.from_rgb(0, 0, 0)
             )
             await message.channel.send(embed=embed)
