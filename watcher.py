@@ -16,7 +16,7 @@ online_users = set()
 rules_storage = {}
 OWNER_ID = 707584409531842623
 # Hardcoded admins (cannot be removed)
-HARD_CODED_ADMINS = {OWNER_ID, 1041268209011138660, 620200699300413442}  # Replace with actual IDs
+HARD_CODED_ADMINS = {OWNER_ID, 1041268209011138660, 620200699300413442, 1324836606812623011}  # Replace with actual IDs
 
 # Set containing both hardcoded and dynamically added admins
 admins = set(HARD_CODED_ADMINS)
