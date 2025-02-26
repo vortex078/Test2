@@ -293,7 +293,7 @@ async def unban(ctx, user: discord.User = None):
 
 @bot.command()
 @is_admin()
-async def warn(ctx, member: discord.Member = None, *, reason: str = None):
+async def w(ctx, member: discord.Member = None, *, reason: str = None):
     """
     Warns a member and DMs them the reason.
     Usage: ..warn @member <reason>
