@@ -231,7 +231,7 @@ async def coinflip(ctx):
     result = random.choice(outcomes)  # Randomly pick either Heads or Tails
     
     # Send the result to the channel
-    await ctx.send(f'It\'s {result}!')
+    await ctx.send(f'{member.mention} It\'s {result}!')
 
 @bot.command(name="ban")
 @is_admin()
