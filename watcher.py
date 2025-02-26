@@ -152,12 +152,24 @@ async def set_or_show_rules(ctx, *, rules_text: str = None):
         # Delete the original message that invoked the command
         await ctx.message.delete()
 
-        # Immediately send the updated information
-        embed = discord.Embed(
-            description=rules_text,
-            color=discord.Color.from_rgb(0, 0, 0)
-        )
-        await ctx.send(embed=embed)
+        # Check if the command is a reply to another message
+        if ctx.message.reference:
+            # Get the original message being replied to
+            original_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+
+            # Create and send the embed as a reply to the original message
+            embed = discord.Embed(
+                description=rules_text,
+                color=discord.Color.from_rgb(0, 0, 0)
+            )
+            await original_message.reply(embed=embed)
+        else:
+            # If the command isn't a reply, just send the embed normally
+            embed = discord.Embed(
+                description=rules_text,
+                color=discord.Color.from_rgb(0, 0, 0)
+            )
+            await ctx.send(embed=embed)
     else:
         # If no rules_text is provided, show the current stored info
         stored_rules = rules_storage.get(ctx.guild.id, "⚠ No information has been set yet. Use `..info (text)` to set them.")
@@ -167,10 +179,19 @@ async def set_or_show_rules(ctx, *, rules_text: str = None):
             color=discord.Color.from_rgb(0, 0, 0)
         )
 
-        await ctx.send(embed=embed)
+        # Check if the command is a reply to another message
+        if ctx.message.reference:
+            # Get the original message being replied to
+            original_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+
+            # Create and send the embed as a reply to the original message
+            await original_message.reply(embed=embed)
+        else:
+            # If the command isn't a reply, just send the embed normally
+            await ctx.send(embed=embed)
+
         await asyncio.sleep(0)
         await ctx.message.delete()
-
 
 
 @bot.command(name="kick")
