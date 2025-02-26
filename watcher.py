@@ -41,22 +41,22 @@ def get_all_admins():
 async def add_admin(ctx, member: discord.Member):
     """Allows the OWNER to add a new admin (including re-adding hardcoded ones)."""
     if ctx.author.id != OWNER_ID:
-        await ctx.send("⛔ Only the **bot owner** can add admins!")
+        await ctx.message.add_reaction("❌")
         return
 
     admins.add(member.id)  # Add to admin list
-    await ctx.send(f"✅ **{member.name}** has been added as an admin!")
+    await ctx.message.add_reaction("✅")
 
 @bot.command(name="removeadmin")
 async def remove_admin(ctx, member: discord.Member):
     """Allows the OWNER to remove any admin, including hardcoded ones."""
     if ctx.author.id != OWNER_ID:
-        await ctx.send("⛔ Only the **bot owner** can remove admins!")
+        await ctx.message.add_reaction("❌")
         return
 
     if member.id in admins:
         admins.remove(member.id)
-        await ctx.send(f"❌ **{member.name}** has been removed as an admin.")
+        await ctx.message.add_reaction("✅")
     else:
         await ctx.send("⚠ This user is **not an admin**!")
 
@@ -140,8 +140,23 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.send("⚠ **Usage:** `..kick @user <reason>`\nExample: `..kick @user Spamming`")
         return
 
-    await member.kick(reason=reason)
-    await ctx.send(f"🔨 **{member.name}** has been kicked. Reason: {reason}")
+    try:
+        # Send DM to the user before kicking them
+        await member.send(f"You have been kicked from **{ctx.guild.name}**\nReason: {reason}")
+    except discord.Forbidden:
+        # If we can't DM the user, notify the admin
+        await ctx.send("⚠ Could not DM the user about their kick.")
+    except Exception as e:
+        await ctx.send(f"⚠ Error sending DM: {str(e)}")
+
+    try:
+        # Kick the member
+        await member.kick(reason=reason)
+    await ctx.message.add_reaction("✅")
+    except discord.Forbidden:
+        await ctx.message.add_reaction("❌")
+    except Exception as e:
+        await ctx.send(f"❌ Error kicking member: {str(e)}")
 
 
 @bot.command(name="ban")
@@ -152,8 +167,23 @@ async def ban(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.send("⚠ **Usage:** `..ban @user <reason>`\nExample: `..ban @user Harassment`")
         return
 
-    await member.ban(reason=reason)
-    await ctx.send(f"🔨 **{member.name}** has been banned. Reason: {reason}")
+    try:
+        # Send DM to the user before banning them
+        await member.send(f"You have been banned from **{ctx.guild.name}**\nReason: {reason}")
+    except discord.Forbidden:
+        # If we can't DM the user, notify the admin
+        await ctx.send("⚠ Could not DM the user about their ban.")
+    except Exception as e:
+        await ctx.send(f"⚠ Error sending DM: {str(e)}")
+
+    try:
+        # Ban the member
+        await member.ban(reason=reason)
+    await ctx.message.add_reaction("✅")
+    except discord.Forbidden:
+        await ctx.message.add_reaction("❌")
+    except Exception as e:
+        await ctx.send(f"❌ Error banning member: {str(e)}")
 
 @bot.command(name="unban")
 @is_admin()
@@ -166,11 +196,11 @@ async def unban(ctx, user: discord.User = None):
     try:
         # Unban the user
         await ctx.guild.unban(user)
-        await ctx.send(f"✅ **{user.name}** has been unbanned from the server.")
+    await ctx.message.add_reaction("✅")
     except discord.NotFound:
         await ctx.send("⚠ This user is not banned.")
     except discord.Forbidden:
-        await ctx.send("⚠ I do not have permission to unban this user.")
+        await ctx.message.add_reaction("❌")
     except Exception as e:
         await ctx.send(f"⚠ An error occurred: {str(e)}")
 
@@ -254,7 +284,6 @@ async def help_command(ctx):
         description += "\n`..s `: Snipes message"
         description += "\n`..cs `: Clears sniped message"
         description += "\n`..r `: Lists roles"
-        description += "\n`..r assign <role_name> @user`: Gives role"
         description += "\n`..d `: Deletes message"
         description += "\n`..warn @user <auto>`: Warns user."
         description += "\n`..listadmins`: Lists all current admins."
@@ -299,22 +328,6 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
             embed.add_field(name="Other Roles", value="\n".join([role.name for role in other_roles]), inline=False)
 
         await ctx.send(embed=embed)
-
-    elif action.lower() == "assign" and role_name and member:
-        # Assign a role to a member
-        role = discord.utils.get(ctx.guild.roles, name=role_name)
-        if role:
-            try:
-                await member.add_roles(role)
-                await ctx.send(f"✅ Assigned the role {role.name} to {member.mention}.")
-            except discord.Forbidden:
-                await ctx.send("❌ I do not have permission to assign roles.")
-            except discord.HTTPException as e:
-                await ctx.send(f"⚠️ Error assigning role: {e}")
-        else:
-            await ctx.send(f"❌ Role `{role_name}` not found.")
-    else:
-        await ctx.send("❌ Invalid usage. Use `..r` to list roles or `..r assign <role_name> @member` to assign a role.")
 
 @bot.command()
 @is_admin()
@@ -407,7 +420,7 @@ async def p(ctx, amount: int = None):
         await ctx.send("❌ State amount.", delete_after=5)
         return
     await ctx.channel.purge(limit=amount + 1)
-    await ctx.send(f"✅", delete_after=3)
+    await ctx.send(f"✅.", delete_after=3)
 
 
 @bot.command()
@@ -419,7 +432,7 @@ async def l(ctx):
 
     # Check if the bot has the required permission
     if not ctx.channel.permissions_for(bot_member).manage_channels:
-        await ctx.send("❌ I don't have permission to manage this channel!")
+        await ctx.message.add_reaction("❌")
         return
     
     # Lock for @everyone
@@ -431,7 +444,7 @@ async def l(ctx):
     if owner2:
         await ctx.channel.set_permissions(owner2, send_messages=True)
 
-    await ctx.send("🔒 Channel locked!")
+    await ctx.message.add_reaction("✅")
 
 @bot.command()
 @commands.has_permissions(manage_channels=True)
@@ -439,12 +452,12 @@ async def ul(ctx):
     bot_member = ctx.guild.me
 
     if not ctx.channel.permissions_for(bot_member).manage_channels:
-        await ctx.send("❌ I don't have permission to manage this channel!")
+        await ctx.message.add_reaction("❌")
         return
 
     # Unlock for @everyone
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
-    await ctx.send("🔓 Channel unlocked!")
+    await ctx.message.add_reaction("✅")
 
 
 @bot.command()
