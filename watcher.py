@@ -521,7 +521,7 @@ async def p(ctx, amount: int = None):
 
 
 @bot.command()
-@commands.has_permissions(manage_channels=True)
+@is_admin()
 async def l(ctx):
     bot_member = ctx.guild.me  # Bot's member object
     owner1 = ctx.guild.get_member(707584409531842623)  # Your first ID
@@ -544,7 +544,7 @@ async def l(ctx):
     await ctx.message.add_reaction("🔒")
 
 @bot.command()
-@commands.has_permissions(manage_channels=True)
+@is_admin()
 async def ul(ctx):
     bot_member = ctx.guild.me
 
