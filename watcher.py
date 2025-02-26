@@ -222,7 +222,15 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.send(f"❌ Error kicking member: {str(e)}")
         await asyncio.sleep(3)
         await ctx.message.delete() 
-
+        
+@bot.command()
+async def coinflip(ctx):
+    # Define the possible outcomes
+    outcomes = ['Heads', 'Tails']
+    result = random.choice(outcomes)  # Randomly pick either Heads or Tails
+    
+    # Send the result to the channel
+    await ctx.send(f'It\'s {result}!')
 
 @bot.command(name="ban")
 @is_admin()
