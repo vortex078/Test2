@@ -298,12 +298,6 @@ async def d(ctx):
     # Get the message that is being replied to
     message_to_delete = ctx.message.reference.resolved
 
-    if message_to_delete.author == bot.user:
-        await ctx.send("❌ You cannot delete my own messages!")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
-        return
-
     try:
         # Delete the message
         await message_to_delete.delete()
@@ -500,6 +494,8 @@ async def p(ctx, amount: int = None):
     """Purge messages with auto-deleting confirmation messages."""
     if amount is None:
         message = await ctx.send("❌ State amount.")
+        await asyncio.sleep(3)  # Wait 3 seconds
+        await message.delete()  # Delete the error message
         return
 
     try:
