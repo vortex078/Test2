@@ -347,15 +347,11 @@ async def help_command(ctx):
     description = ""
 
     # General commands
-    description += "\n`..info`: Displays the current server info."
+    description += "\n`..info`: Displays info."
     description += "\n`..ping`: Latency check"
 
     # Admin commands (for admins)
     if ctx.author.id in admins:
-        description += "\n`..set <text>`: Sets the server info."
-        description += "\n`..edit <text>`: Edits the existing info."
-        description += "\n`..del`: Deletes the stored server indo."
-        description += "\n`..afk <reason>`: Sets AFK status."
         description += "\n`..kick @user <reason>`: Kicks user with reason."
         description += "\n`..ban @user <reason>`: Bans user with reason."
         description += "\n`..unban @user`: Un-bans user."
@@ -363,12 +359,13 @@ async def help_command(ctx):
         description += "\n`..ut @user`: Removes time-out from member."
         description += "\n`..l `: Locks current channel"
         description += "\n`..ul `: Unlocks current channel"
+        description += "\n`..d `: Deletes message"
+        description += "\n`..w @user <reason>`: Warns user."
         description += "\n`..p `: Purges messages"
         description += "\n`..s `: Snipes message"
         description += "\n`..cs `: Clears sniped message"
         description += "\n`..r `: Lists roles"
-        description += "\n`..d `: Deletes message"
-        description += "\n`..w @user <reason>`: Warns user."
+        description += "\n`..afk <reason>`: Sets AFK status."
         description += "\n`..coin `: Either heads or tails"
         description += "\n`..listadmins`: Lists all current admins."
 
