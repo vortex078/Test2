@@ -386,7 +386,7 @@ async def help_command(ctx):
         description += "\n`..cs `: Clears sniped message"
         description += "\n`..r `: Lists roles"
         description += "\n`..d `: Deletes message"
-        description += "\n`..warn @user <auto>`: Warns user."
+        description += "\n`..w @user <reason>`: Warns user."
         description += "\n`..listadmins`: Lists all current admins."
 
     # Owner-specific commands (for the bot owner)
