@@ -16,7 +16,7 @@ online_users = set()
 rules_storage = {}
 OWNER_ID = 707584409531842623
 # Hardcoded admins (cannot be removed)
-HARD_CODED_ADMINS = {OWNER_ID}  # Replace with actual IDs
+HARD_CODED_ADMINS = {OWNER_ID, 1041268209011138660, 620200699300413442}  # Replace with actual IDs
 
 # Set containing both hardcoded and dynamically added admins
 admins = set(HARD_CODED_ADMINS)
@@ -94,6 +94,9 @@ async def set_rules(ctx, *, rules_text: str):
     """Allows an admin to set the server info."""
     rules_storage[ctx.guild.id] = rules_text
     await ctx.message.add_reaction("✅")
+    
+    await asyncio.sleep(3)
+    await ctx.message.delete() 
 
 @bot.command(name="edit")
 @is_admin()
@@ -101,14 +104,22 @@ async def edit_rules(ctx, *, new_rules: str = None):
     """Edits the existing information."""
     if ctx.guild.id not in rules_storage:
         await ctx.send("⚠ No Info found. Use `..set (info)` first.")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
         return
 
     if not new_rules:
         await ctx.send("⚠ Please provide new info.")
+
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
         return
 
     rules_storage[ctx.guild.id] = new_rules
     await ctx.message.add_reaction("✅")
+
+    await asyncio.sleep(3)
+    await ctx.message.delete() 
 
 @bot.command(name="del")
 @is_admin()
@@ -117,8 +128,12 @@ async def delete_rules(ctx):
     if ctx.guild.id in rules_storage:
         del rules_storage[ctx.guild.id]
         await ctx.message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     else:
         await ctx.message.add_reaction("❌")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
 @bot.command(name="info")
 async def show_rules(ctx):
@@ -131,6 +146,8 @@ async def show_rules(ctx):
     )
 
     await ctx.send(embed=embed)
+    await asyncio.sleep(3)
+    await ctx.message.delete() 
 
 @bot.command(name="kick")
 @is_admin()
@@ -138,6 +155,8 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
     """Kicks a member from the server, requiring a reason."""
     if not member or not reason:
         await ctx.send("⚠ **Usage:** `..kick @user <reason>`\nExample: `..kick @user Spamming`")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
         return
 
     try:
@@ -146,17 +165,27 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
     except discord.Forbidden:
         # If we can't DM the user, notify the admin
         await ctx.send("⚠ Could not DM the user about their kick.")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except Exception as e:
         await ctx.send(f"⚠ Error sending DM: {str(e)}")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
     try:
         # Kick the member
         await member.kick(reason=reason)
         await ctx.message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except Exception as e:
         await ctx.send(f"❌ Error kicking member: {str(e)}")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
 
 @bot.command(name="ban")
@@ -165,6 +194,8 @@ async def ban(ctx, member: discord.Member = None, *, reason: str = None):
     """Bans a member from the server, requiring a reason."""
     if not member or not reason:
         await ctx.send("⚠ **Usage:** `..ban @user <reason>`\nExample: `..ban @user Harassment`")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
         return
 
     try:
@@ -173,17 +204,27 @@ async def ban(ctx, member: discord.Member = None, *, reason: str = None):
     except discord.Forbidden:
         # If we can't DM the user, notify the admin
         await ctx.send("⚠ Could not DM the user about their ban.")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except Exception as e:
         await ctx.send(f"⚠ Error sending DM: {str(e)}")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
     try:
         # Ban the member
         await member.ban(reason=reason)
         await ctx.message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except Exception as e:
         await ctx.send(f"❌ Error banning member: {str(e)}")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
 @bot.command(name="unban")
 @is_admin()
@@ -191,18 +232,28 @@ async def unban(ctx, user: discord.User = None):
     """Unbans a member from the server by user ID."""
     if not user:
         await ctx.send("⚠ **Usage:** `..unban @user` or `..unban <user_id>`")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
         return
 
     try:
         # Unban the user
         await ctx.guild.unban(user)
         await ctx.message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.NotFound:
         await ctx.send("⚠ This user is not banned.")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except Exception as e:
         await ctx.send(f"⚠ An error occurred: {str(e)}")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
 @bot.command()
 @is_admin()
@@ -213,9 +264,13 @@ async def warn(ctx, member: discord.Member = None, *, reason: str = None):
     """
     if member is None:
         await ctx.send("❌ Provide member.")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
         return
     if reason is None:
         await ctx.send("❌ Provide reason.")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
         return
 
     try:
@@ -225,6 +280,8 @@ async def warn(ctx, member: discord.Member = None, *, reason: str = None):
     except discord.Forbidden:
         # If the bot cannot DM the user, inform the command executor
         await ctx.send(f"❌ Cannot DM {member.mention}")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
 @bot.command()
 @is_admin()
@@ -234,6 +291,8 @@ async def d(ctx):
     """
     if not ctx.message.reference:
         await ctx.send("❌ You need to reply to a message to delete it.")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
         return
 
     # Get the message that is being replied to
@@ -241,20 +300,28 @@ async def d(ctx):
 
     if message_to_delete.author == bot.user:
         await ctx.send("❌ You cannot delete my own messages!")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
         return
 
     try:
         # Delete the message
         await message_to_delete.delete()
-
+        
         # React with ✅ on the original message
         await ctx.message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.Forbidden:
         await ctx.send("❌ I do not have permission to delete messages.")
         await ctx.message.add_reaction("❌")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.HTTPException as e:
         await ctx.send(f"❌ Error deleting message: {e}")
         await ctx.message.add_reaction("❌")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
 
 @bot.event
@@ -341,12 +408,17 @@ async def t(ctx, member: discord.Member, duration: int):
 
         # Add a check mark reaction to the message to indicate success
         await ctx.message.add_reaction("✅")
-
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")  # Add red X on failure
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.HTTPException as e:
         await ctx.send(f"⚠️ Error while timing out: {e}")
         await ctx.message.add_reaction("❌")  # Add red X on failure
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
 @bot.command()
 @is_admin()
@@ -359,12 +431,17 @@ async def ut(ctx, member: discord.Member):
 
         # Add a check mark reaction to the message to indicate success
         await ctx.message.add_reaction("✅")
-
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")  # Add red X on failure
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     except discord.HTTPException as e:
         await ctx.send(f"⚠️ Error while removing timeout: {e}")
         await ctx.message.add_reaction("❌")  # Add red X on failure
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
 @bot.command()
 async def ping(ctx):
@@ -409,8 +486,12 @@ async def cs(ctx):
     if ctx.channel.id in sniped_messages:
         del sniped_messages[ctx.channel.id]  # Clear the message for that channel
         await ctx.message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
     else:
         await ctx.message.add_reaction("❌")
+        await asyncio.sleep(3)
+        await ctx.message.delete() 
 
         
 @bot.command()
@@ -462,7 +543,7 @@ async def l(ctx):
     if owner2:
         await ctx.channel.set_permissions(owner2, send_messages=True)
 
-    await ctx.message.add_reaction("✅")
+    await ctx.message.add_reaction("🔒")
 
 @bot.command()
 @commands.has_permissions(manage_channels=True)
@@ -475,7 +556,7 @@ async def ul(ctx):
 
     # Unlock for @everyone
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
-    await ctx.message.add_reaction("✅")
+    await ctx.message.add_reaction("🔓")
 
 
 @bot.command()
