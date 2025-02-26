@@ -342,6 +342,8 @@ async def help_command(ctx):
         description += "\n`..unban @user`: Un-bans user."
         description += "\n`..t @user <length>`: Times-out member."
         description += "\n`..ut @user`: Removes time-out from member."
+        description += "\n`..l `: Locks current channel"
+        description += "\n`..ul `: Unlocks current channel"
         description += "\n`..p <amount>`: Purges messages"
         description += "\n`..s `: Snipes message"
         description += "\n`..cs `: Clears sniped message"
