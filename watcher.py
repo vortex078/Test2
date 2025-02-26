@@ -4,6 +4,7 @@ from discord.ext import commands  # type: ignore
 from datetime import timedelta
 import random
 import time
+import re
 
 intents = discord.Intents.default()
 intents.members = True
@@ -450,27 +451,46 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
 
 @bot.command()
 @is_admin()
-async def t(ctx, member: discord.Member, duration: int):
+async def t(ctx, member: discord.Member, duration: str):
     """
-    Timeout a member for a given duration in seconds.
+    Timeout a member for a given duration. The duration can be specified in seconds (s), minutes (m), or hours (h).
     """
     try:
-        timeout_duration = discord.utils.utcnow() + timedelta(seconds=duration)  # Set timeout duration
-        await member.timeout(timeout_duration)  # Apply timeout
+        # Parse the duration
+        match = re.match(r"(\d+)([smh])", duration.lower())  # Match digits followed by s/m/h
+        if not match:
+            await ctx.send("⚠️ Invalid duration format. Please use `1s` for seconds, `1m` for minutes, or `1h` for hours.")
+            return
+
+        time_value = int(match.group(1))  # Get the numeric part
+        time_unit = match.group(2)  # Get the unit (s, m, h)
+
+        # Convert the duration to seconds
+        if time_unit == "s":
+            timeout_duration = timedelta(seconds=time_value)
+        elif time_unit == "m":
+            timeout_duration = timedelta(minutes=time_value)
+        elif time_unit == "h":
+            timeout_duration = timedelta(hours=time_value)
+
+        # Apply the timeout
+        timeout_end = discord.utils.utcnow() + timeout_duration  # Set timeout end time
+        await member.timeout(timeout_end)  # Apply timeout
 
         # Add a check mark reaction to the message to indicate success
         await ctx.message.add_reaction("✅")
         await asyncio.sleep(3)
-        await ctx.message.delete() 
+        await ctx.message.delete()
+
     except discord.Forbidden:
-        await ctx.message.add_reaction("❌")  # Add red X on failure
+        await ctx.message.add_reaction("❌")  # Add red X on failure (if bot doesn't have permission)
         await asyncio.sleep(3)
-        await ctx.message.delete() 
+        await ctx.message.delete()
     except discord.HTTPException as e:
         await ctx.send(f"⚠️ Error while timing out: {e}")
         await ctx.message.add_reaction("❌")  # Add red X on failure
         await asyncio.sleep(3)
-        await ctx.message.delete() 
+        await ctx.message.delete()
 
 @bot.command()
 @is_admin()
