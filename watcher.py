@@ -414,7 +414,7 @@ async def cs(ctx):
 
         
 @bot.command()
-@commands.has_permissions(manage_messages=True)
+@is_admin()
 async def p(ctx, amount: int = None):
     if amount is None:
         await ctx.send("❌ State amount.", delete_after=5)
