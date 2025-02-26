@@ -131,9 +131,16 @@ async def set_or_show_rules(ctx, *, rules_text: str = None):
     if rules_text:
         # If there is rules_text, we are setting it
         rules_storage[ctx.guild.id] = rules_text
-        await ctx.message.add_reaction("✅")
-        await asyncio.sleep(3)
+        
+        # Delete the original message that invoked the command
         await ctx.message.delete()
+
+        # Immediately send the updated information
+        embed = discord.Embed(
+            description=rules_text,
+            color=discord.Color.from_rgb(0, 0, 0)
+        )
+        await ctx.send(embed=embed)
     else:
         # If no rules_text is provided, show the current stored info
         stored_rules = rules_storage.get(ctx.guild.id, "⚠ No information has been set yet. Use `..info (text)` to set them.")
@@ -146,6 +153,7 @@ async def set_or_show_rules(ctx, *, rules_text: str = None):
         await ctx.send(embed=embed)
         await asyncio.sleep(0)
         await ctx.message.delete()
+
 
 
 @bot.command(name="kick")
