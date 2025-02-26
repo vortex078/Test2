@@ -107,7 +107,7 @@ async def on_message(message):
         del afk_users[message.author.id]
         embed = discord.Embed(
             description=f"✅ {message.author.mention}, you're no longer AFK.",
-            color=discord.Color.green()
+            color=discord.Color.from_rgb(0, 0, 0)
         )
         await message.channel.send(embed=embed)
 
@@ -116,7 +116,7 @@ async def on_message(message):
             reason = afk_users[mention.id]
             embed = discord.Embed(
                 description=f"⚠ {mention.mention} is AFK: **{reason}**",
-                color=discord.Color.yellow()
+                color=discord.Color.from_rgb(0, 0, 0)
             )
             await message.channel.send(embed=embed)
 
