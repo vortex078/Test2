@@ -416,11 +416,29 @@ async def cs(ctx):
 @bot.command()
 @is_admin()
 async def p(ctx, amount: int = None):
+    """Purge messages with auto-deleting confirmation messages."""
     if amount is None:
-        await ctx.send("❌ State amount.", delete_after=5)
+        message = await ctx.send("❌ State amount.")
+        await asyncio.sleep(3)  # Wait 3 seconds
+        await message.delete()  # Delete the error message
         return
-    await ctx.channel.purge(limit=amount + 1)
-    await ctx.send(f"✅.", delete_after=3)
+
+    try:
+        # Delete the specified number of messages plus the command message
+        deleted = await ctx.channel.purge(limit=amount + 1)
+        
+        # Send confirmation and delete it after 3 seconds
+        confirm_msg = await ctx.send(f"✅.")
+        await asyncio.sleep(3)
+        await confirm_msg.delete()
+    except discord.Forbidden:
+        error_msg = await ctx.send(f"❌.")
+        await asyncio.sleep(3)
+        await error_msg.delete()
+    except discord.HTTPException as e:
+        error_msg = await ctx.send(f"❌ Error: {str(e)}")
+        await asyncio.sleep(3)
+        await error_msg.delete()
 
 
 @bot.command()
