@@ -325,6 +325,7 @@ async def on_ready():
 @bot.command(name="Help")
 async def help_command(ctx):
     """Displays all available bot commands."""
+    await ctx.message.delete() 
     description = ""
 
     # General commands
