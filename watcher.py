@@ -223,15 +223,6 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.send(f"❌ Error kicking member: {str(e)}")
         await asyncio.sleep(3)
         await ctx.message.delete() 
-        
-@bot.command()
-async def coinflip(ctx):
-    # Define the possible outcomes
-    outcomes = ['Heads', 'Tails']
-    result = random.choice(outcomes)  # Randomly pick either Heads or Tails
-    
-    # Send the result to the channel
-    await ctx.send(f'{member.mention} It\'s {result}!')
 
 @bot.command(name="ban")
 @is_admin()
@@ -329,6 +320,15 @@ async def w(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.send(f"❌ Cannot DM {member.mention}")
         await asyncio.sleep(3)
         await ctx.message.delete() 
+
+@bot.command()
+async def coinflip(ctx):
+    # Define the possible outcomes
+    outcomes = ['Heads', 'Tails']
+    result = random.choice(outcomes)  # Randomly pick either Heads or Tails
+    
+    # Send the result to the channel, mentioning the user who invoked the command
+    await ctx.send(f'{ctx.author.mention} It\'s {result}!')
 
 @bot.command()
 @is_admin()
