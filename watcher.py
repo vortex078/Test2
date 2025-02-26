@@ -179,7 +179,7 @@ async def ban(ctx, member: discord.Member = None, *, reason: str = None):
     try:
         # Ban the member
         await member.ban(reason=reason)
-    await ctx.message.add_reaction("✅")
+        await ctx.message.add_reaction("✅")
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")
     except Exception as e:
@@ -196,7 +196,7 @@ async def unban(ctx, user: discord.User = None):
     try:
         # Unban the user
         await ctx.guild.unban(user)
-    await ctx.message.add_reaction("✅")
+        await ctx.message.add_reaction("✅")
     except discord.NotFound:
         await ctx.send("⚠ This user is not banned.")
     except discord.Forbidden:
