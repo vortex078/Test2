@@ -133,7 +133,7 @@ async def on_message(message):
             time_display = f"{minutes} minutes and {seconds} seconds ago"
 
             embed = discord.Embed(
-                description=f":warning: {mention.mention} is AFK: **{reason}** ({time_display})",
+                description=f":warning: {mention.mention} is AFK: **{reason}** - ({time_display})",
                 color=discord.Color.from_rgb(0, 0, 0)
             )
             await message.channel.send(embed=embed)
