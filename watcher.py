@@ -96,7 +96,7 @@ async def afk(ctx, *, reason: str = "AFK"):
 
     embed = discord.Embed(
         description=f"✅ {ctx.author.mention}: You're now AFK with the status: **{reason}**",
-        color=discord.Color.green()
+        color=discord.Color.from_rgb(0, 0, 0)
     )
     await ctx.send(embed=embed)
 
