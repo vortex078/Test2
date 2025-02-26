@@ -152,7 +152,7 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
     try:
         # Kick the member
         await member.kick(reason=reason)
-    await ctx.message.add_reaction("✅")
+        await ctx.message.add_reaction("✅")
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")
     except Exception as e:
