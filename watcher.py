@@ -531,30 +531,58 @@ async def cs(ctx):
 @bot.command()
 @is_admin()
 async def p(ctx, amount: int = None):
-    """Purge messages with auto-deleting confirmation messages."""
-    if amount is None:
-        await ctx.message.delete()
-        message = await ctx.send("❌ State amount.")
-        await asyncio.sleep(3)  # Wait 3 seconds
-        await message.delete()  # Delete the error message
-        return
+    """Purge messages with auto-deleting confirmation messages.
+       If used as a reply, it purges up to and including the replied message.
+    """
+    if ctx.message.reference:  # Check if the command was used as a reply
+        try:
+            ref_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+            messages = []
+            async for msg in ctx.channel.history(limit=200):  # Scan last 200 messages
+                messages.append(msg)
+                if msg.id == ref_msg.id:
+                    break  # Stop at the replied message
 
-    try:
-        # Delete the specified number of messages plus the command message
-        deleted = await ctx.channel.purge(limit=amount + 1)
-        
-        # Send confirmation and delete it after 3 seconds
-        confirm_msg = await ctx.send(f"✅.")
-        await asyncio.sleep(3)
-        await confirm_msg.delete()
-    except discord.Forbidden:
-        error_msg = await ctx.send(f"❌.")
-        await asyncio.sleep(3)
-        await error_msg.delete()
-    except discord.HTTPException as e:
-        error_msg = await ctx.send(f"❌ Error: {str(e)}")
-        await asyncio.sleep(3)
-        await error_msg.delete()
+            if messages:
+                await ctx.channel.delete_messages(messages)
+                confirm_msg = await ctx.send("✅.")
+                await asyncio.sleep(3)
+                await confirm_msg.delete()
+            else:
+                error_msg = await ctx.send("❌ Couldn't find the message.")
+                await asyncio.sleep(3)
+                await error_msg.delete()
+        except discord.Forbidden:
+            error_msg = await ctx.send("❌ No permission.")
+            await asyncio.sleep(3)
+            await error_msg.delete()
+        except discord.HTTPException as e:
+            error_msg = await ctx.send(f"❌ Error: {str(e)}")
+            await asyncio.sleep(3)
+            await error_msg.delete()
+
+    else:  # Normal purge behavior
+        if amount is None:
+            await ctx.message.delete()
+            message = await ctx.send("❌ State amount.")
+            await asyncio.sleep(3)
+            await message.delete()
+            return
+
+        try:
+            deleted = await ctx.channel.purge(limit=amount + 1)
+            confirm_msg = await ctx.send("✅.")
+            await asyncio.sleep(3)
+            await confirm_msg.delete()
+        except discord.Forbidden:
+            error_msg = await ctx.send("❌.")
+            await asyncio.sleep(3)
+            await error_msg.delete()
+        except discord.HTTPException as e:
+            error_msg = await ctx.send(f"❌ Error: {str(e)}")
+            await asyncio.sleep(3)
+            await error_msg.delete()
+
 
 
 @bot.command()
