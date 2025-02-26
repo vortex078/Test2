@@ -87,6 +87,42 @@ async def list_admins(ctx):
 
     await ctx.send(embed=embed)
 
+afk_users = {}
+
+@bot.command()
+async def afk(ctx, *, reason: str = "AFK"):
+    """Sets a user as AFK with a reason."""
+    afk_users[ctx.author.id] = reason
+
+    embed = discord.Embed(
+        description=f"✅ {ctx.author.mention}: You're now AFK with the status: **{reason}**",
+        color=discord.Color.green()
+    )
+    await ctx.send(embed=embed)
+
+@bot.event
+async def on_message(message):
+    """Checks if an AFK user sends a message or is mentioned."""
+    if message.author.id in afk_users:
+        del afk_users[message.author.id]
+        embed = discord.Embed(
+            description=f"✅ {message.author.mention}, you're no longer AFK.",
+            color=discord.Color.green()
+        )
+        await message.channel.send(embed=embed)
+
+    for mention in message.mentions:
+        if mention.id in afk_users:
+            reason = afk_users[mention.id]
+            embed = discord.Embed(
+                description=f"⚠ {mention.mention} is AFK: **{reason}**",
+                color=discord.Color.yellow()
+            )
+            await message.channel.send(embed=embed)
+
+    await bot.process_commands(message)
+
+
 
 @bot.command(name="set")
 @is_admin()
