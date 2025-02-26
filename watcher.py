@@ -115,7 +115,7 @@ async def on_message(message):
         if mention.id in afk_users:
             reason = afk_users[mention.id]
             embed = discord.Embed(
-                description=f"⚠ {mention.mention} is AFK: **{reason}**",
+                description=f":warning: {mention.mention} is AFK: **{reason}**",
                 color=discord.Color.from_rgb(0, 0, 0)
             )
             await message.channel.send(embed=embed)
@@ -373,6 +373,7 @@ async def help_command(ctx):
         description += "\n`..set <text>`: Sets the server info."
         description += "\n`..edit <text>`: Edits the existing info."
         description += "\n`..del`: Deletes the stored server indo."
+        description += "\n`..afk <reason>`: Sets AFK status."
         description += "\n`..kick @user <reason>`: Kicks user with reason."
         description += "\n`..ban @user <reason>`: Bans user with reason."
         description += "\n`..unban @user`: Un-bans user."
