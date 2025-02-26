@@ -322,7 +322,7 @@ async def w(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.message.delete() 
 
 @bot.command()
-async def coinflip(ctx):
+async def coin(ctx):
     # Define the possible outcomes
     outcomes = ['Heads', 'Tails']
     result = random.choice(outcomes)  # Randomly pick either Heads or Tails
@@ -398,6 +398,7 @@ async def help_command(ctx):
         description += "\n`..r `: Lists roles"
         description += "\n`..d `: Deletes message"
         description += "\n`..w @user <reason>`: Warns user."
+        description += "\n`..coin `: Either heads or tails"
         description += "\n`..listadmins`: Lists all current admins."
 
     # Owner-specific commands (for the bot owner)
