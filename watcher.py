@@ -328,6 +328,7 @@ async def coin(ctx):
     result = random.choice(outcomes)  # Randomly pick either Heads or Tails
     
     # Send the result to the channel, mentioning the user who invoked the command
+    await ctx.message.delete() 
     await ctx.send(f'{ctx.author.mention} It\'s {result}!')
 
 @bot.command()
