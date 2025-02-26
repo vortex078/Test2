@@ -312,7 +312,9 @@ async def w(ctx, member: discord.Member = None, *, reason: str = None):
     try:
         # Send a DM to the member with the warning reason
         await member.send(f"You have been warned in {ctx.guild.name}.\nReason: {reason}")
+        await ctx.message.delete()
         await ctx.send(f"✅ {member.mention} Warned! Reason: {reason}")
+
     except discord.Forbidden:
         # If the bot cannot DM the user, inform the command executor
         await ctx.send(f"❌ Cannot DM {member.mention}")
@@ -678,3 +680,4 @@ async def on_presence_update(before, after):
 import os
 TOKEN = os.getenv("watch")
 bot.run(TOKEN)
+
