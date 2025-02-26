@@ -2,6 +2,7 @@ import discord  # type: ignore
 import asyncio
 from discord.ext import commands  # type: ignore
 from datetime import timedelta
+import random
 
 intents = discord.Intents.default()
 intents.members = True
