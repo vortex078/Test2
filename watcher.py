@@ -124,67 +124,29 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-
-@bot.command(name="set")
-@is_admin()
-async def set_rules(ctx, *, rules_text: str):
-    """Allows an admin to set the server info."""
-    rules_storage[ctx.guild.id] = rules_text
-    await ctx.message.add_reaction("✅")
-    
-    await asyncio.sleep(3)
-    await ctx.message.delete() 
-
-@bot.command(name="edit")
-@is_admin()
-async def edit_rules(ctx, *, new_rules: str = None):
-    """Edits the existing information."""
-    if ctx.guild.id not in rules_storage:
-        await ctx.send("⚠ No Info found. Use `..set (info)` first.")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
-        return
-
-    if not new_rules:
-        await ctx.send("⚠ Please provide new info.")
-
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
-        return
-
-    rules_storage[ctx.guild.id] = new_rules
-    await ctx.message.add_reaction("✅")
-
-    await asyncio.sleep(3)
-    await ctx.message.delete() 
-
-@bot.command(name="del")
-@is_admin()
-async def delete_rules(ctx):
-    """Deletes the stored server info."""
-    if ctx.guild.id in rules_storage:
-        del rules_storage[ctx.guild.id]
+@bot.command(name="info")
+@is_admin()  # Admins only
+async def set_or_show_rules(ctx, *, rules_text: str = None):
+    """Sets or displays the server info."""
+    if rules_text:
+        # If there is rules_text, we are setting it
+        rules_storage[ctx.guild.id] = rules_text
         await ctx.message.add_reaction("✅")
         await asyncio.sleep(3)
-        await ctx.message.delete() 
+        await ctx.message.delete()
     else:
-        await ctx.message.add_reaction("❌")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
+        # If no rules_text is provided, show the current stored info
+        stored_rules = rules_storage.get(ctx.guild.id, "⚠ No information has been set yet. Use `..info (text)` to set them.")
 
-@bot.command(name="info")
-async def show_rules(ctx):
-    """Displays the stored server info."""
-    rules_text = rules_storage.get(ctx.guild.id, "⚠ No information has been set yet. Use `..set (info)` to set them.")
+        embed = discord.Embed(
+            description=stored_rules,
+            color=discord.Color.from_rgb(0, 0, 0)
+        )
 
-    embed = discord.Embed(
-        description=rules_text,
-        color=discord.Color.from_rgb(0, 0, 0)
-    )
+        await ctx.send(embed=embed)
+        await asyncio.sleep(0)
+        await ctx.message.delete()
 
-    await ctx.send(embed=embed)
-    await asyncio.sleep(0)
-    await ctx.message.delete() 
 
 @bot.command(name="kick")
 @is_admin()
