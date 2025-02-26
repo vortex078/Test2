@@ -500,8 +500,6 @@ async def p(ctx, amount: int = None):
     """Purge messages with auto-deleting confirmation messages."""
     if amount is None:
         message = await ctx.send("❌ State amount.")
-        await asyncio.sleep(3)  # Wait 3 seconds
-        await message.delete()  # Delete the error message
         return
 
     try:
