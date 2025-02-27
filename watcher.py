@@ -813,7 +813,7 @@ async def on_message(message):
         embed.add_field(name="User", value=message.author.name)
         embed.add_field(name="Command", value=command)
         embed.add_field(name="Channel", value=message.channel.mention)
-        embed.add_field(name="Time", value=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         await channel.send(embed=embed)
 
     await bot.process_commands(message)
