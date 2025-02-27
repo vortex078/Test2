@@ -481,8 +481,14 @@ async def help_command(ctx):
 @bot.command(name="r")
 @is_admin()
 async def r(ctx, action: str = None, role_name: str = None, member: discord.Member = None):
+
+    if ctx.author.id != OWNER_ID:
+        await ctx.message.add_reaction("❌")
+        await asyncio.sleep(3)
+        await ctx.message.delete()
+        return
+
     if action.lower() == "add" and role_name and member:
-        # Try to get role by name or ID
         role = discord.utils.get(ctx.guild.roles, name=role_name) or discord.utils.get(ctx.guild.roles, id=int(role_name) if role_name.isdigit() else None)
         
         if role:
@@ -509,7 +515,6 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
             await ctx.message.delete()
     
     elif action.lower() == "rem" and role_name and member:
-        # Try to get role by name or ID
         role = discord.utils.get(ctx.guild.roles, name=role_name) or discord.utils.get(ctx.guild.roles, id=int(role_name) if role_name.isdigit() else None)
         
         if role:
