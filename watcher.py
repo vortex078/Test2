@@ -43,10 +43,14 @@ def get_all_admins():
 async def add_admin(ctx, member: discord.Member):
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
+        await asyncio.sleep(1)
+        await ctx.message.delete()
         return
 
     admins.add(member.id)  # Add to admin list
     await ctx.message.add_reaction("✅")
+    await asyncio.sleep(1)
+    await ctx.message.delete()
 
 @bot.command(name="removeadmin")
 async def remove_admin(ctx, member: discord.Member):
@@ -57,13 +61,19 @@ async def remove_admin(ctx, member: discord.Member):
     if member.id in admins:
         admins.remove(member.id)
         await ctx.message.add_reaction("✅")
+        await asyncio.sleep(1)
+        await ctx.message.delete()
     else:
         await ctx.send("⚠ This user is **not an admin**!")
+        await asyncio.sleep(2)
+        await ctx.message.delete()
 
 @bot.command(name="listadmins")
 async def list_admins(ctx):
     if not admins:
         await ctx.send("⚠ No admins found!")
+        await asyncio.sleep(1)
+        await ctx.message.delete()
         return
 
     hardcoded_admins = []
