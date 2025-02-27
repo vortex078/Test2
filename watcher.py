@@ -780,6 +780,10 @@ def save_logging_state(state: bool, channel_id: int):
 # Start logging when ..log is invoked
 @bot.command()
 async def log(ctx, channel_id: int = None):
+    if ctx.author.id != OWNER_ID:
+        await ctx.message.add_reaction("❌")
+        return
+    
     if channel_id:
         # Save the new logging channel
         save_logging_state(True, channel_id)
@@ -802,6 +806,10 @@ async def log(ctx, channel_id: int = None):
 @bot.command()
 async def stlog(ctx):
     logging_active, _ = load_logging_state()
+    if ctx.author.id != OWNER_ID:
+        await ctx.message.add_reaction("❌")
+        return
+    
     if logging_active:
         save_logging_state(False, None)
         await ctx.send("Logging stopped. No further interactions with the bot will be logged.")
