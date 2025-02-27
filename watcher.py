@@ -566,7 +566,6 @@ sniped_messages = {}
 
 @bot.command()
 async def s(ctx):
-    # Check if there is a sniped message in the current channel
     if ctx.channel.id in sniped_messages:
         sniped_message = sniped_messages[ctx.channel.id]
 
@@ -587,9 +586,9 @@ async def s(ctx):
     else:
         await ctx.send("Nothing found.")
 
+# Clear sniped message from the current channel
 @bot.command()
 async def cs(ctx):
-    # Clear sniped message for the current channel
     if ctx.channel.id in sniped_messages:
         del sniped_messages[ctx.channel.id]
         await ctx.message.add_reaction("✅")
