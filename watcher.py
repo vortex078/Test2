@@ -724,7 +724,7 @@ async def on_presence_update(before, after):
             print(f"⚠️ Error sending DM: {e}")
 
 
-def load_logging_state(guild_id):
+def load_logging_state(guild_id=None):
     try:
         with open("logging_state.json", "r") as f:
             data = json.load(f)
