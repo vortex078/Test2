@@ -827,32 +827,35 @@ async def stlog(ctx):
         await asyncio.sleep(3)
         await ctx.message.delete()
 
-# Log interactions with the bot (commands)
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
         return  # Don't log messages sent by the bot itself
 
+    # Load the logging state and channel ID from JSON or memory
     logging_active, channel_id, logging_guild = load_logging_state()
 
-    # Only proceed if logging is active
-    if logging_active and channel_id and logging_guild == message.guild.id:
-    # Continue logging logic
-
-        # Check if it's a bot command and capture the full message content
+    # Only proceed if logging is active and it's the correct guild
+    if logging_active and channel_id and logging_guild == str(message.guild.id):  # Ensure we compare to a string
+        # Proceed with logging the bot command
         command = message.content
 
-        # Only log if it's a command starting with the bot's prefix
-        channel = bot.get_channel(channel_id)
-        if channel:
-            embed = discord.Embed(title="Bot Command Interaction Logged", color=discord.Color.green())
-            embed.add_field(name="User", value=message.author.name)
-            embed.add_field(name="Command", value=command)  # Log the full command, including args
-            embed.add_field(name="Channel", value=message.channel.mention)
-            embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-            await channel.send(embed=embed)
+        # Check if it's a bot command and capture the full message content
+        if command.startswith(".."):  # Modify with your prefix if it's not `..`
+            channel = bot.get_channel(int(channel_id))  # Get the channel using the channel ID
 
+            if channel:
+                embed = discord.Embed(title="Bot Command Interaction Logged", color=discord.Color.green())
+                embed.add_field(name="User", value=message.author.name)
+                embed.add_field(name="Command", value=command)  # Log the full command, including args
+                embed.add_field(name="Channel", value=message.channel.mention)
+                embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+                
+                await channel.send(embed=embed)
+
+    # Let the bot process commands as usual
     await bot.process_commands(message)
+
 
 # Log bot's message deletions
 @bot.event
