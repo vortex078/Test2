@@ -562,8 +562,11 @@ async def on_message_delete(message):
     sniped_messages[message.channel.id] = message
     print(f"Deleted message in {message.channel.name}: {message.content}")
 
+sniped_messages = {}
+
 @bot.command()
 async def s(ctx):
+    # Check if there is a sniped message in the current channel
     if ctx.channel.id in sniped_messages:
         sniped_message = sniped_messages[ctx.channel.id]
 
@@ -586,6 +589,7 @@ async def s(ctx):
 
 @bot.command()
 async def cs(ctx):
+    # Clear sniped message for the current channel
     if ctx.channel.id in sniped_messages:
         del sniped_messages[ctx.channel.id]
         await ctx.message.add_reaction("✅")
@@ -594,7 +598,7 @@ async def cs(ctx):
     else:
         await ctx.message.add_reaction("❌")
         await asyncio.sleep(3)
-        await ctx.message.delete() 
+        await ctx.message.delete()
 
         
 @bot.command()
