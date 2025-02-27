@@ -768,14 +768,21 @@ def load_logging_state():
     try:
         with open("logging_state.json", "r") as f:
             data = json.load(f)
-            return data.get("logging_active", False), data.get("logging_channel", None)
+            logging_active = data.get("logging_active", False)
+            logging_channel = data.get("logging_channel", None)
+            logging_guild = data.get("logging_guild", None)
+            return logging_active, logging_channel, logging_guild
     except FileNotFoundError:
-        return False, None
+        return False, None, None  # If the file doesn't exist, return default values
+    except json.JSONDecodeError:
+        return False, None, None  # If the file is corrupted or empty, return default values
+
 
 # Save logging state and channel to JSON file
-def save_logging_state(state: bool, channel_id: int):
+# Save logging state and channel to JSON file
+def save_logging_state(state: bool, channel_id: int, guild_id: int):
     with open("logging_state.json", "w") as f:
-        json.dump({"logging_active": state, "logging_channel": channel_id}, f)
+        json.dump({"logging_active": state, "logging_channel": channel_id, "logging_guild": guild_id}, f)
 
 # Start logging when ..log is invoked
 @bot.command()
@@ -786,7 +793,7 @@ async def log(ctx, channel_id: int = None):
     
     if channel_id:
         # Save the new logging channel
-        save_logging_state(True, channel_id)
+        save_logging_state(True, channel_id, ctx.guild.id)
         await ctx.send(f"Logging started. All interactions with the bot will now be logged in <#{channel_id}>.")
         await asyncio.sleep(3)
         await ctx.message.delete()
@@ -826,8 +833,9 @@ async def on_message(message):
     if message.author == bot.user:
         return  # Don't log messages sent by the bot itself
 
-    logging_active, channel_id = load_logging_state()
-    if logging_active and channel_id and message.content.startswith(bot.command_prefix):
+    logging_active, channel_id, logging_guild = load_logging_state()
+    
+    if logging_active and channel_id and logging_guild == message.guild.id and message.content.startswith(bot.command_prefix):
         # Check if it's a bot command and capture the full message content
         command = message.content
 
