@@ -804,10 +804,14 @@ async def on_message(message):
         return  # Don't log messages sent by the bot itself
 
     if load_logging_state() and message.content.startswith(bot.command_prefix):
+        # Check if it's a bot command
+        command = message.content.split()[0].lower()
+
+        # Only log if it's a command starting with the bot's prefix
         channel = bot.get_channel(1344399177882271745)  # Replace with your log channel ID
-        embed = discord.Embed(title="Bot Interaction Logged", color=discord.Color.green())
+        embed = discord.Embed(title="Bot Command Interaction Logged", color=discord.Color.green())
         embed.add_field(name="User", value=message.author.name)
-        embed.add_field(name="Command", value=message.content)
+        embed.add_field(name="Command", value=command)
         embed.add_field(name="Channel", value=message.channel.mention)
         embed.add_field(name="Time", value=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         await channel.send(embed=embed)
