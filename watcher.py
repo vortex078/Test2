@@ -763,23 +763,32 @@ async def on_presence_update(before, after):
             print(f"⚠️ Error sending DM: {e}")
 
 
-def load_logging_state():
+# Load logging state and channel from JSON file for a specific server
+def load_logging_state(guild_id):
     try:
         with open("logging_state.json", "r") as f:
             data = json.load(f)
-            logging_active = data.get("logging_active", False)
-            logging_channel = data.get("logging_channel", None)
-            logging_guild = data.get("logging_guild", None)
-            return logging_active, logging_channel, logging_guild
-    except FileNotFoundError:
-        return False, None, None  # If the file doesn't exist, return default values
-    except json.JSONDecodeError:
-        return False, None, None  # If the file is corrupted or empty, return default values
+            # Get logging state for the specific guild
+            guild_data = data.get(str(guild_id), {})
+            logging_active = guild_data.get("logging_active", False)
+            logging_channel = guild_data.get("logging_channel", None)
+            return logging_active, logging_channel
+    except (FileNotFoundError, json.JSONDecodeError):
+        return False, None  # If file doesn't exist or is corrupted, return default values
 
-# Save logging state and channel to JSON file
+# Save logging state and channel for a specific server (guild)
 def save_logging_state(state: bool, channel_id: int, guild_id: int):
+    try:
+        with open("logging_state.json", "r") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = {}
+
+    # Update or add the server's logging data
+    data[str(guild_id)] = {"logging_active": state, "logging_channel": channel_id}
+
     with open("logging_state.json", "w") as f:
-        json.dump({"logging_active": state, "logging_channel": channel_id, "logging_guild": guild_id}, f)
+        json.dump(data, f)
 
 # Start logging when ..log is invoked
 @bot.command()
@@ -787,16 +796,18 @@ async def log(ctx, channel_id: int = None):
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
         return
-    
+
+    guild_id = ctx.guild.id
+
     if channel_id:
-        # Save the new logging channel
-        save_logging_state(True, channel_id, ctx.guild.id)
+        # Save the new logging channel for the specific guild
+        save_logging_state(True, channel_id, guild_id)
         await ctx.send(f"Logging started. All interactions with the bot will now be logged in <#{channel_id}>.")
         await asyncio.sleep(3)
         await ctx.message.delete()
     else:
         # Use previously saved channel if no channel ID is provided
-        logging_active, current_channel_id, _ = load_logging_state()
+        logging_active, current_channel_id = load_logging_state(guild_id)
         if logging_active:
             await ctx.send(f"Logging is already active and logging to <#{current_channel_id}>.")
             await asyncio.sleep(3)
@@ -808,22 +819,23 @@ async def log(ctx, channel_id: int = None):
 
 @bot.command()
 async def stlog(ctx):
-    # Unpack all three return values from load_logging_state
-    logging_active, channel_id, logging_guild = load_logging_state()
+    # Unpack all values for the current server (guild)
+    guild_id = ctx.guild.id
+    logging_active, channel_id = load_logging_state(guild_id)
 
     # Check if the user is the owner
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
         return
-    
+
     # Stop logging if it's active
     if logging_active:
-        save_logging_state(False, None, None)  # Set logging to False and reset channel and guild to None
-        await ctx.send("Logging stopped. No further interactions with the bot will be logged.")
+        save_logging_state(False, None, guild_id)  # Set logging to False for this guild
+        await ctx.send("Logging stopped. No further interactions with the bot will be logged in this server.")
         await asyncio.sleep(3)
         await ctx.message.delete()
     else:
-        await ctx.send("Logging is already stopped.")
+        await ctx.send("Logging is already stopped for this server.")
         await asyncio.sleep(3)
         await ctx.message.delete()
 
@@ -832,17 +844,14 @@ async def on_message(message):
     if message.author == bot.user:
         return  # Don't log messages sent by the bot itself
 
-    # Load the logging state and channel ID from JSON or memory
-    logging_active, channel_id, logging_guild = load_logging_state()
+    guild_id = message.guild.id
+    logging_active, channel_id = load_logging_state(guild_id)
 
     # Only proceed if logging is active and it's the correct guild
-    if logging_active and channel_id and logging_guild == message.guild.id:
-        # Proceed with logging the bot command
+    if logging_active and channel_id:
         command = message.content
-
-        # Check if it's a bot command and capture the full message content
         if command.startswith(".."):  # Modify with your prefix if it's not `..`
-            channel = bot.get_channel(int(channel_id))  # Get the channel using the channel ID
+            channel = bot.get_channel(channel_id)  # Get the channel using the channel ID
 
             if channel:
                 embed = discord.Embed(title="Bot Command Interaction Logged", color=discord.Color.green())
@@ -850,17 +859,16 @@ async def on_message(message):
                 embed.add_field(name="Command", value=command)  # Log the full command, including args
                 embed.add_field(name="Channel", value=message.channel.mention)
                 embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-                
+
                 await channel.send(embed=embed)
 
-    # Let the bot process commands as usual
     await bot.process_commands(message)
-
 
 # Log bot's message deletions
 @bot.event
 async def on_message_delete(message):
-    logging_active, channel_id, _ = load_logging_state()
+    guild_id = message.guild.id
+    logging_active, channel_id = load_logging_state(guild_id)
     if message.author == bot.user and logging_active and channel_id:
         channel = bot.get_channel(channel_id)
         if channel:
@@ -873,7 +881,8 @@ async def on_message_delete(message):
 # Log bot's message edits
 @bot.event
 async def on_message_edit(before, after):
-    logging_active, channel_id, _ = load_logging_state()
+    guild_id = before.guild.id
+    logging_active, channel_id = load_logging_state(guild_id)
     if before.author == bot.user and logging_active and channel_id:
         channel = bot.get_channel(channel_id)
         if channel:
@@ -887,7 +896,8 @@ async def on_message_edit(before, after):
 # Log when a reaction is added to the bot's message
 @bot.event
 async def on_reaction_add(reaction, user):
-    logging_active, channel_id, _ = load_logging_state()
+    guild_id = reaction.message.guild.id
+    logging_active, channel_id = load_logging_state(guild_id)
     if reaction.message.author == bot.user and logging_active and channel_id:
         channel = bot.get_channel(channel_id)
         if channel:
