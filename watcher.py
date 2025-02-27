@@ -344,7 +344,7 @@ async def d(ctx):
         
         # React with ✅ on the original message
         await ctx.message.add_reaction("✅")
-        await asyncio.sleep(3)
+        await asyncio.sleep(1.5)
         await ctx.message.delete() 
     except discord.Forbidden:
         await ctx.send("❌ I do not have permission to delete messages.")
