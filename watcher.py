@@ -23,7 +23,6 @@ rules_storage = {}
 
 OWNER_ID = 707584409531842623
 
-# JSON file for saving hardcoded admins
 ADMIN_FILE = "admins.json"
 
 def load_hardcoded_admins():
@@ -37,11 +36,10 @@ def save_hardcoded_admins():
     with open(ADMIN_FILE, "w") as f:
         json.dump(list(HARD_CODED_ADMINS), f)
 
-# Load hardcoded admins from JSON
-HARD_CODED_ADMINS = load_hardcoded_admins()
-HARD_CODED_ADMINS.add(OWNER_ID)  # Ensure the owner is always an admin
 
-# Set for temporary admins (not saved)
+HARD_CODED_ADMINS = load_hardcoded_admins()
+HARD_CODED_ADMINS.add(OWNER_ID)
+
 temporary_admins = set()
 
 def is_admin():
@@ -94,8 +92,8 @@ async def add_hardcoded_admin(ctx, member: discord.Member):
         await ctx.send("⚠ This user is **already a hardcoded admin**!")
         return
 
-    HARD_CODED_ADMINS.add(member.id)  # Add to the set
-    save_hardcoded_admins()  # Save to JSON
+    HARD_CODED_ADMINS.add(member.id)
+    save_hardcoded_admins()
     await ctx.message.add_reaction("✅")
     await asyncio.sleep(1)
     await ctx.message.delete()
@@ -110,8 +108,8 @@ async def remove_hardcoded_admin(ctx, member: discord.Member):
         await ctx.send("⚠ This user is **not a hardcoded admin**!")
         return
 
-    HARD_CODED_ADMINS.remove(member.id)  # Remove from the set
-    save_hardcoded_admins()  # Save to JSON
+    HARD_CODED_ADMINS.remove(member.id)
+    save_hardcoded_admins()
     await ctx.message.add_reaction("✅")
     await asyncio.sleep(1)
     await ctx.message.delete()
@@ -130,12 +128,12 @@ async def list_admins(ctx):
     async def get_username(user_id):
         member = ctx.guild.get_member(user_id)
         if member:
-            return member.name  # If user is in server, return their name
+            return member.name
         try:
-            user = await bot.fetch_user(user_id)  # Fetch from Discord if not in server
+            user = await bot.fetch_user(user_id)
             return user.name
         except discord.NotFound:
-            return f"Unknown ({user_id})"  # If user doesn't exist
+            return f"Unknown ({user_id})"
 
     for admin_id in HARD_CODED_ADMINS:
         username = await get_username(admin_id)
@@ -161,7 +159,7 @@ afk_users = {}
 
 @bot.command()
 async def afk(ctx, *, reason: str = "AFK"):
-    # Store the time when AFK is set
+
     afk_users[ctx.author.id] = {"reason": reason, "time": time.time()}
 
     embed = discord.Embed(
@@ -173,13 +171,12 @@ async def afk(ctx, *, reason: str = "AFK"):
 @bot.event
 async def on_message(message):
     if message.author.id in afk_users:
-        # Calculate how long ago the user set their AFK status
+
         afk_time = afk_users[message.author.id]["time"]
         time_ago = time.time() - afk_time
         minutes = int(time_ago // 60)
         seconds = int(time_ago % 60)
         
-        # Remove the AFK status when the user sends a message
         del afk_users[message.author.id]
         
         embed = discord.Embed(
@@ -191,7 +188,7 @@ async def on_message(message):
     for mention in message.mentions:
         if mention.id in afk_users:
             reason = afk_users[mention.id]["reason"]
-            # Calculate how long ago the AFK was set for the mentioned user
+
             afk_time = afk_users[mention.id]["time"]
             time_ago = time.time() - afk_time
             minutes = int(time_ago // 60)
@@ -208,35 +205,30 @@ async def on_message(message):
 
 
 @bot.command(name="i")
-@is_admin()  # Admins only
+@is_admin()
 async def set_or_show_rules(ctx, *, rules_text: str = None):
     if rules_text:
-        # If there is rules_text, we are setting it
+
         rules_storage[ctx.guild.id] = rules_text
         
-        # Delete the original message that invoked the command
         await ctx.message.delete()
 
-        # Check if the command is a reply to another message
         if ctx.message.reference:
-            # Get the original message being replied to
+
             original_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
 
-            # Create and send the embed as a reply to the original message
             embed = discord.Embed(
                 description=rules_text,
                 color=discord.Color.from_rgb(0, 0, 0)
             )
             await original_message.reply(embed=embed)
         else:
-            # If the command isn't a reply, just send the embed normally
             embed = discord.Embed(
                 description=rules_text,
                 color=discord.Color.from_rgb(0, 0, 0)
             )
             await ctx.send(embed=embed)
     else:
-        # If no rules_text is provided, show the current stored info
         stored_rules = rules_storage.get(ctx.guild.id, "⚠ No information has been set yet. Use `..info (text)` to set them.")
 
         embed = discord.Embed(
@@ -244,15 +236,12 @@ async def set_or_show_rules(ctx, *, rules_text: str = None):
             color=discord.Color.from_rgb(0, 0, 0)
         )
 
-        # Check if the command is a reply to another message
         if ctx.message.reference:
-            # Get the original message being replied to
+
             original_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
 
-            # Create and send the embed as a reply to the original message
             await original_message.reply(embed=embed)
         else:
-            # If the command isn't a reply, just send the embed normally
             await ctx.send(embed=embed)
 
         await asyncio.sleep(0)
@@ -269,10 +258,8 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
         return
 
     try:
-        # Send DM to the user before kicking them
         await member.send(f"You have been kicked from **{ctx.guild.name}**\nReason: {reason}")
     except discord.Forbidden:
-        # If we can't DM the user, notify the admin
         await ctx.send("⚠ Could not DM the user about their kick.")
         await asyncio.sleep(3)
         await ctx.message.delete() 
@@ -282,7 +269,6 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.message.delete() 
 
     try:
-        # Kick the member
         await member.kick(reason=reason)
         await ctx.message.add_reaction("✅")
         await asyncio.sleep(3)
@@ -306,10 +292,8 @@ async def ban(ctx, member: discord.Member = None, *, reason: str = None):
         return
 
     try:
-        # Send DM to the user before banning them
         await member.send(f"You have been banned from **{ctx.guild.name}**\nReason: {reason}")
     except discord.Forbidden:
-        # If we can't DM the user, notify the admin
         await ctx.send("⚠ Could not DM the user about their ban.")
         await asyncio.sleep(3)
         await ctx.message.delete() 
@@ -319,7 +303,6 @@ async def ban(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.message.delete() 
 
     try:
-        # Ban the member
         await member.ban(reason=reason)
         await ctx.message.add_reaction("✅")
         await asyncio.sleep(3)
@@ -343,7 +326,6 @@ async def unban(ctx, user: discord.User = None):
         return
 
     try:
-        # Unban the user
         await ctx.guild.unban(user)
         await ctx.message.add_reaction("✅")
         await asyncio.sleep(3)
@@ -376,24 +358,21 @@ async def w(ctx, member: discord.Member = None, *, reason: str = None):
         return
 
     try:
-        # Send a DM to the member with the warning reason
         await member.send(f"You have been warned in {ctx.guild.name}.\nReason: {reason}")
         await ctx.message.delete()
         await ctx.send(f"✅ {member.mention} Warned! Reason: {reason}")
 
     except discord.Forbidden:
-        # If the bot cannot DM the user, inform the command executor
         await ctx.send(f"❌ Cannot DM {member.mention}")
         await asyncio.sleep(3)
         await ctx.message.delete() 
 
 @bot.command()
 async def cf(ctx):
-    # Define the possible outcomes
+
     outcomes = ['Heads', 'Tails']
-    result = random.choice(outcomes)  # Randomly pick either Heads or Tails
+    result = random.choice(outcomes)
     
-    # Send the result to the channel, mentioning the user who invoked the command
     await ctx.message.delete() 
     await ctx.send(f'{ctx.author.mention} It\'s {result}!')
 
@@ -406,14 +385,11 @@ async def d(ctx):
         await ctx.message.delete() 
         return
 
-    # Get the message that is being replied to
     message_to_delete = ctx.message.reference.resolved
 
     try:
-        # Delete the message
         await message_to_delete.delete()
         
-        # React with ✅ on the original message
         await ctx.message.add_reaction("✅")
         await asyncio.sleep(0.5)
         await ctx.message.delete() 
@@ -458,7 +434,6 @@ async def help_command(ctx):
     description += "\n`..cf `: Either heads or tails."
     description += "\n`..la`: Lists all current admins."
 
-    # Owner-specific commands (for the bot owner)
     if ctx.author.id == OWNER_ID:
         description += "\n\n`..aa @user`: Adds a new admin."
         description += "\n`..ra @user`: Removes an admin."
@@ -480,11 +455,9 @@ async def help_command(ctx):
 async def r(ctx, action: str = None, role_name: str = None, member: discord.Member = None):
 
     if action is None:
-        # Display all roles in separate sections
         roles = ctx.guild.roles
         embed = discord.Embed(title="Roles in the server", color=discord.Color.blue())
 
-        # Grouping roles into sections (e.g., Admin roles, Member roles)
         admin_roles = [role for role in roles if "admin" in role.name.lower()]
         member_roles = [role for role in roles if "member" in role.name.lower()]
         other_roles = [role for role in roles if role not in admin_roles and role not in member_roles]
@@ -503,23 +476,20 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
 async def t(ctx, member: discord.Member, duration: str):
 
     try:
-        # Check if the member is the bot owner
         if member.id == OWNER_ID:
             await ctx.message.add_reaction("⚠️")
             await asyncio.sleep(1)
             await ctx.message.delete()
             return
         
-        # Parse the duration
-        match = re.match(r"(\d+)([smh])", duration.lower())  # Match digits followed by s/m/h
+        match = re.match(r"(\d+)([smh])", duration.lower())
         if not match:
             await ctx.send("⚠️ Invalid duration format. Please use `1s` for seconds, `1m` for minutes, or `1h` for hours.")
             return
 
-        time_value = int(match.group(1))  # Get the numeric part
-        time_unit = match.group(2)  # Get the unit (s, m, h)
+        time_value = int(match.group(1))
+        time_unit = match.group(2)
 
-        # Convert the duration to seconds
         if time_unit == "s":
             timeout_duration = timedelta(seconds=time_value)
         elif time_unit == "m":
@@ -527,22 +497,20 @@ async def t(ctx, member: discord.Member, duration: str):
         elif time_unit == "h":
             timeout_duration = timedelta(hours=time_value)
 
-        # Apply the timeout
-        timeout_end = discord.utils.utcnow() + timeout_duration  # Set timeout end time
-        await member.timeout(timeout_end)  # Apply timeout
+        timeout_end = discord.utils.utcnow() + timeout_duration
+        await member.timeout(timeout_end)
 
-        # Add a check mark reaction to the message to indicate success
         await ctx.message.add_reaction("✅")
         await asyncio.sleep(3)
         await ctx.message.delete()
 
     except discord.Forbidden:
-        await ctx.message.add_reaction("❌")  # Add red X on failure (if bot doesn't have permission)
+        await ctx.message.add_reaction("❌")
         await asyncio.sleep(3)
         await ctx.message.delete()
     except discord.HTTPException as e:
         await ctx.send(f"⚠️ Error while timing out: {e}")
-        await ctx.message.add_reaction("❌")  # Add red X on failure
+        await ctx.message.add_reaction("❌")
         await asyncio.sleep(3)
         await ctx.message.delete()
 
@@ -551,42 +519,40 @@ async def t(ctx, member: discord.Member, duration: str):
 async def ut(ctx, member: discord.Member):
 
     try:
-        await member.timeout(None)  # Remove timeout
+        await member.timeout(None)
 
-        # Add a check mark reaction to the message to indicate success
         await ctx.message.add_reaction("✅")
         await asyncio.sleep(3)
         await ctx.message.delete() 
     except discord.Forbidden:
-        await ctx.message.add_reaction("❌")  # Add red X on failure
+        await ctx.message.add_reaction("❌")
         await asyncio.sleep(3)
         await ctx.message.delete() 
     except discord.HTTPException as e:
         await ctx.send(f"⚠️ Error while removing timeout: {e}")
-        await ctx.message.add_reaction("❌")  # Add red X on failure
+        await ctx.message.add_reaction("❌")
         await asyncio.sleep(3)
         await ctx.message.delete() 
 
 @bot.command()
 async def ping(ctx):
-    latency = round(bot.latency * 1000)  # Convert from seconds to milliseconds
+    latency = round(bot.latency * 1000)
     await ctx.send(f"{latency}ms")
 
-sniped_messages = {}  # Global variable to store deleted messages per channel
+sniped_messages = {}
 
 @bot.event
 async def on_message_delete(message):
-    if message.author.bot:  # Ignore bot messages
+    if message.author.bot:
         return
-    sniped_messages[message.channel.id] = message  # Save the deleted message for the channel
-    print(f"Deleted message in {message.channel.name}: {message.content}")  # Debugging line to confirm deletion is detected
+    sniped_messages[message.channel.id] = message
+    print(f"Deleted message in {message.channel.name}: {message.content}")
 
 @bot.command()
 async def s(ctx):
     if ctx.channel.id in sniped_messages:
         sniped_message = sniped_messages[ctx.channel.id]
 
-        # Create embed to display the sniped message
         embed = discord.Embed(
             title="Sniped Message",
             description=sniped_message.content if sniped_message.content else "*[No Text]*",
@@ -596,10 +562,9 @@ async def s(ctx):
         embed.set_author(name=sniped_message.author, icon_url=sniped_message.author.avatar.url if sniped_message.author.avatar else None)
         embed.set_footer(text=f"Deleted in #{sniped_message.channel.name}")
 
-        # Check if there are attachments, and if so, add them to the embed
         if sniped_message.attachments:
-            attachment = sniped_message.attachments[0]  # Get the first attachment
-            embed.set_image(url=attachment.url)  # Display the attachment image in the embed
+            attachment = sniped_message.attachments[0]
+            embed.set_image(url=attachment.url)
 
         await ctx.send(embed=embed)
     else:
@@ -608,7 +573,7 @@ async def s(ctx):
 @bot.command()
 async def cs(ctx):
     if ctx.channel.id in sniped_messages:
-        del sniped_messages[ctx.channel.id]  # Clear the message for that channel
+        del sniped_messages[ctx.channel.id]
         await ctx.message.add_reaction("✅")
         await asyncio.sleep(3)
         await ctx.message.delete() 
@@ -622,14 +587,14 @@ async def cs(ctx):
 @is_admin()
 async def p(ctx, amount: int = None):
 
-    if ctx.message.reference:  # Check if the command was used as a reply
+    if ctx.message.reference:
         try:
             ref_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
             messages = []
-            async for msg in ctx.channel.history(limit=200):  # Scan last 200 messages
+            async for msg in ctx.channel.history(limit=200):
                 messages.append(msg)
                 if msg.id == ref_msg.id:
-                    break  # Stop at the replied message
+                    break
 
             if messages:
                 await ctx.channel.delete_messages(messages)
@@ -649,7 +614,7 @@ async def p(ctx, amount: int = None):
             await asyncio.sleep(3)
             await error_msg.delete()
 
-    else:  # Normal purge behavior
+    else:
         if amount is None:
             await ctx.message.delete()
             message = await ctx.send("❌ State amount.")
@@ -676,19 +641,16 @@ async def p(ctx, amount: int = None):
 @bot.command()
 @is_admin()
 async def l(ctx):
-    bot_member = ctx.guild.me  # Bot's member object
-    owner1 = ctx.guild.get_member(707584409531842623)  # Your first ID
-    owner2 = ctx.guild.get_member(1343671645637967975)  # Second ID
+    bot_member = ctx.guild.me
+    owner1 = ctx.guild.get_member(707584409531842623)
+    owner2 = ctx.guild.get_member(1343671645637967975)
 
-    # Check if the bot has the required permission
     if not ctx.channel.permissions_for(bot_member).manage_channels:
         await ctx.message.add_reaction("❌")
         return
     
-    # Lock for @everyone
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
 
-    # Allow both users to send messages
     if owner1:
         await ctx.channel.set_permissions(owner1, send_messages=True)
     if owner2:
@@ -705,7 +667,6 @@ async def ul(ctx):
         await ctx.message.add_reaction("❌")
         return
 
-    # Unlock for @everyone
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
     await ctx.message.add_reaction("🔓")
 
@@ -742,18 +703,14 @@ async def on_presence_update(before, after):
         print(f"on_presence_update triggered for {after.name}: {before.status} -> {after.status}")
 
         try:
-            # Fetch the bot owner (YOU) to ensure the DM is sent correctly
-            user = await bot.fetch_user(707584409531842623)  # Replace with your Discord ID
+            user = await bot.fetch_user(707584409531842623)
 
-            # Debugging: Check if we are detecting the transition correctly
             if before.status == after.status:
                 print(f"🔹 Status didn't change: {after.name} remains {after.status}")
-                return  # No need to send a duplicate DM
+                return
 
-            # Build the DM message
             message = f"<@707584409531842623> **{after.name}: {before.status} → {after.status}!** "
 
-            # Send DM
             await user.send(message)
             print(f"📩 Sent DM: {message}")
 
@@ -763,20 +720,18 @@ async def on_presence_update(before, after):
             print(f"⚠️ Error sending DM: {e}")
 
 
-# Load logging state and channel from JSON file for a specific server
 def load_logging_state(guild_id):
     try:
         with open("logging_state.json", "r") as f:
             data = json.load(f)
-            # Get logging state for the specific guild
+
             guild_data = data.get(str(guild_id), {})
             logging_active = guild_data.get("logging_active", False)
             logging_channel = guild_data.get("logging_channel", None)
             return logging_active, logging_channel
     except (FileNotFoundError, json.JSONDecodeError):
-        return False, None  # If file doesn't exist or is corrupted, return default values
+        return False, None
 
-# Save logging state and channel for a specific server (guild)
 def save_logging_state(state: bool, channel_id: int, guild_id: int):
     try:
         with open("logging_state.json", "r") as f:
@@ -784,13 +739,11 @@ def save_logging_state(state: bool, channel_id: int, guild_id: int):
     except (FileNotFoundError, json.JSONDecodeError):
         data = {}
 
-    # Update or add the server's logging data
     data[str(guild_id)] = {"logging_active": state, "logging_channel": channel_id}
 
     with open("logging_state.json", "w") as f:
         json.dump(data, f)
 
-# Start logging when ..log is invoked
 @bot.command()
 async def log(ctx, channel_id: int = None):
     if ctx.author.id != OWNER_ID:
@@ -800,13 +753,11 @@ async def log(ctx, channel_id: int = None):
     guild_id = ctx.guild.id
 
     if channel_id:
-        # Save the new logging channel for the specific guild
         save_logging_state(True, channel_id, guild_id)
         await ctx.send(f"Logging started. All interactions with the bot will now be logged in <#{channel_id}>.")
         await asyncio.sleep(3)
         await ctx.message.delete()
     else:
-        # Use previously saved channel if no channel ID is provided
         logging_active, current_channel_id = load_logging_state(guild_id)
         if logging_active:
             await ctx.send(f"Logging is already active and logging to <#{current_channel_id}>.")
@@ -819,18 +770,15 @@ async def log(ctx, channel_id: int = None):
 
 @bot.command()
 async def stlog(ctx):
-    # Unpack all values for the current server (guild)
     guild_id = ctx.guild.id
     logging_active, channel_id = load_logging_state(guild_id)
 
-    # Check if the user is the owner
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
         return
 
-    # Stop logging if it's active
     if logging_active:
-        save_logging_state(False, None, guild_id)  # Set logging to False for this guild
+        save_logging_state(False, None, guild_id)
         await ctx.send("Logging stopped. No further interactions with the bot will be logged in this server.")
         await asyncio.sleep(3)
         await ctx.message.delete()
@@ -842,21 +790,20 @@ async def stlog(ctx):
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
-        return  # Don't log messages sent by the bot itself
+        return
 
     guild_id = message.guild.id
     logging_active, channel_id = load_logging_state(guild_id)
 
-    # Only proceed if logging is active and it's the correct guild
     if logging_active and channel_id:
         command = message.content
-        if command.startswith(".."):  # Modify with your prefix if it's not `..`
-            channel = bot.get_channel(channel_id)  # Get the channel using the channel ID
+        if command.startswith(".."):
+            channel = bot.get_channel(channel_id)
 
             if channel:
                 embed = discord.Embed(title="Bot Command Interaction Logged", color=discord.Color.green())
                 embed.add_field(name="User", value=message.author.name)
-                embed.add_field(name="Command", value=command)  # Log the full command, including args
+                embed.add_field(name="Command", value=command)
                 embed.add_field(name="Channel", value=message.channel.mention)
                 embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
 
@@ -864,7 +811,6 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-# Log bot's message deletions
 @bot.event
 async def on_message_delete(message):
     guild_id = message.guild.id
@@ -878,7 +824,6 @@ async def on_message_delete(message):
             embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
             await channel.send(embed=embed)
 
-# Log bot's message edits
 @bot.event
 async def on_message_edit(before, after):
     guild_id = before.guild.id
@@ -893,7 +838,6 @@ async def on_message_edit(before, after):
             embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
             await channel.send(embed=embed)
 
-# Log when a reaction is added to the bot's message
 @bot.event
 async def on_reaction_add(reaction, user):
     guild_id = reaction.message.guild.id
