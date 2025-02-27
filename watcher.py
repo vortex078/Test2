@@ -761,37 +761,43 @@ async def on_presence_update(before, after):
             print(f"⚠️ Error sending DM: {e}")
 
 
-LOG_CHANNEL_ID = 1344399177882271745  # Your logging channel ID
-# Load logging state from JSON file
+# Load logging state and channel from JSON file
 def load_logging_state():
     try:
         with open("logging_state.json", "r") as f:
             data = json.load(f)
-            return data.get("logging_active", False)
+            return data.get("logging_active", False), data.get("logging_channel", None)
     except FileNotFoundError:
-        return False
+        return False, None
 
-# Save logging state to JSON file
-def save_logging_state(state: bool):
+# Save logging state and channel to JSON file
+def save_logging_state(state: bool, channel_id: int):
     with open("logging_state.json", "w") as f:
-        json.dump({"logging_active": state}, f)
+        json.dump({"logging_active": state, "logging_channel": channel_id}, f)
 
 # Start logging when ..log is invoked
 @bot.command()
-async def log(ctx):
-    """Starts logging interactions with the bot."""
-    if not load_logging_state():
-        save_logging_state(True)
-        await ctx.send("Logging started. All interactions with the bot will now be logged.")
+async def log(ctx, channel_id: int = None):
+    """Starts logging interactions with the bot and sets the log channel."""
+    if channel_id:
+        # Save the new logging channel
+        save_logging_state(True, channel_id)
+        await ctx.send(f"Logging started. All interactions with the bot will now be logged in <#{channel_id}>.")
     else:
-        await ctx.send("Logging is already active.")
+        # Use previously saved channel if no channel ID is provided
+        logging_active, current_channel_id = load_logging_state()
+        if logging_active:
+            await ctx.send(f"Logging is already active and logging to <#{current_channel_id}>.")
+        else:
+            await ctx.send("Logging is not active. Please provide a channel ID to start logging.")
 
 # Stop logging when ..stlog is invoked
 @bot.command()
 async def stlog(ctx):
     """Stops logging interactions with the bot."""
-    if load_logging_state():
-        save_logging_state(False)
+    logging_active, _ = load_logging_state()
+    if logging_active:
+        save_logging_state(False, None)
         await ctx.send("Logging stopped. No further interactions with the bot will be logged.")
     else:
         await ctx.send("Logging is already stopped.")
@@ -803,18 +809,20 @@ async def on_message(message):
     if message.author == bot.user:
         return  # Don't log messages sent by the bot itself
 
-    if load_logging_state() and message.content.startswith(bot.command_prefix):
+    logging_active, channel_id = load_logging_state()
+    if logging_active and channel_id and message.content.startswith(bot.command_prefix):
         # Check if it's a bot command and capture the full message content
         command = message.content
 
         # Only log if it's a command starting with the bot's prefix
-        channel = bot.get_channel(1344399177882271745)  # Replace with your log channel ID
-        embed = discord.Embed(title="Bot Command Interaction Logged", color=discord.Color.green())
-        embed.add_field(name="User", value=message.author.name)
-        embed.add_field(name="Command", value=command)  # Log the full command, including args
-        embed.add_field(name="Channel", value=message.channel.mention)
-        embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-        await channel.send(embed=embed)
+        channel = bot.get_channel(channel_id)
+        if channel:
+            embed = discord.Embed(title="Bot Command Interaction Logged", color=discord.Color.green())
+            embed.add_field(name="User", value=message.author.name)
+            embed.add_field(name="Command", value=command)  # Log the full command, including args
+            embed.add_field(name="Channel", value=message.channel.mention)
+            embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+            await channel.send(embed=embed)
 
     await bot.process_commands(message)
 
@@ -822,40 +830,46 @@ async def on_message(message):
 @bot.event
 async def on_message_delete(message):
     """Log when the bot's message is deleted."""
-    if message.author == bot.user and load_logging_state():
-        channel = bot.get_channel(1344399177882271745)  # Replace with your log channel ID
-        embed = discord.Embed(title="Bot Message Deleted", color=discord.Color.red())
-        embed.add_field(name="Message", value=message.content or "No content")
-        embed.add_field(name="Channel", value=message.channel.mention)
-        embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-        await channel.send(embed=embed)
+    logging_active, channel_id = load_logging_state()
+    if message.author == bot.user and logging_active and channel_id:
+        channel = bot.get_channel(channel_id)
+        if channel:
+            embed = discord.Embed(title="Bot Message Deleted", color=discord.Color.red())
+            embed.add_field(name="Message", value=message.content or "No content")
+            embed.add_field(name="Channel", value=message.channel.mention)
+            embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+            await channel.send(embed=embed)
 
 # Log bot's message edits
 @bot.event
 async def on_message_edit(before, after):
     """Log when the bot's message is edited."""
-    if before.author == bot.user and load_logging_state():
-        channel = bot.get_channel(1344399177882271745)  # Replace with your log channel ID
-        embed = discord.Embed(title="Bot Message Edited", color=discord.Color.yellow())
-        embed.add_field(name="Before", value=before.content or "No content")
-        embed.add_field(name="After", value=after.content or "No content")
-        embed.add_field(name="Channel", value=before.channel.mention)
-        embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-        await channel.send(embed=embed)
+    logging_active, channel_id = load_logging_state()
+    if before.author == bot.user and logging_active and channel_id:
+        channel = bot.get_channel(channel_id)
+        if channel:
+            embed = discord.Embed(title="Bot Message Edited", color=discord.Color.yellow())
+            embed.add_field(name="Before", value=before.content or "No content")
+            embed.add_field(name="After", value=after.content or "No content")
+            embed.add_field(name="Channel", value=before.channel.mention)
+            embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+            await channel.send(embed=embed)
 
 # Log when a reaction is added to the bot's message
 @bot.event
 async def on_reaction_add(reaction, user):
     """Log when a user reacts to the bot's message."""
-    if reaction.message.author == bot.user and load_logging_state():
-        channel = bot.get_channel(1344399177882271745)  # Replace with your log channel ID
-        embed = discord.Embed(title="Bot Message Reacted", color=discord.Color.blue())
-        embed.add_field(name="User", value=user.name)
-        embed.add_field(name="Reaction", value=str(reaction.emoji))
-        embed.add_field(name="Message", value=reaction.message.content or "No content")
-        embed.add_field(name="Channel", value=reaction.message.channel.mention)
-        embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-        await channel.send(embed=embed)
+    logging_active, channel_id = load_logging_state()
+    if reaction.message.author == bot.user and logging_active and channel_id:
+        channel = bot.get_channel(channel_id)
+        if channel:
+            embed = discord.Embed(title="Bot Message Reacted", color=discord.Color.blue())
+            embed.add_field(name="User", value=user.name)
+            embed.add_field(name="Reaction", value=str(reaction.emoji))
+            embed.add_field(name="Message", value=reaction.message.content or "No content")
+            embed.add_field(name="Channel", value=reaction.message.channel.mention)
+            embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+            await channel.send(embed=embed)
 
 
 import os
