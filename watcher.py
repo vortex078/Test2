@@ -570,16 +570,22 @@ async def snipe(ctx):
         embed.set_footer(text=f"Deleted message from {author}")
         await ctx.send(embed=embed)
     else:
-        await ctx.send("There's nothing to snipe!")
+        await ctx.message.add_reaction("❌")
+        await asyncio.sleep(1)
+        await ctx.message.delete() 
 
 
 @bot.command(name="cs")
 async def clear_snipe(ctx):
     if ctx.channel.id in sniped_messages:
         del sniped_messages[ctx.channel.id]
-        await ctx.send("Sniped message cleared!")
+        await ctx.message.add_reaction("✅")
+        await asyncio.sleep(1)
+        await ctx.message.delete() 
     else:
-        await ctx.send("There's nothing to clear!")
+        await ctx.message.add_reaction("❌")
+        await asyncio.sleep(1)
+        await ctx.message.delete() 
 
 @bot.command()
 @is_admin()
