@@ -763,7 +763,6 @@ async def on_presence_update(before, after):
             print(f"⚠️ Error sending DM: {e}")
 
 
-# Load logging state and channel from JSON file
 def load_logging_state():
     try:
         with open("logging_state.json", "r") as f:
@@ -777,8 +776,6 @@ def load_logging_state():
     except json.JSONDecodeError:
         return False, None, None  # If the file is corrupted or empty, return default values
 
-
-# Save logging state and channel to JSON file
 # Save logging state and channel to JSON file
 def save_logging_state(state: bool, channel_id: int, guild_id: int):
     with open("logging_state.json", "w") as f:
@@ -799,7 +796,7 @@ async def log(ctx, channel_id: int = None):
         await ctx.message.delete()
     else:
         # Use previously saved channel if no channel ID is provided
-        logging_active, current_channel_id = load_logging_state()
+        logging_active, current_channel_id, _ = load_logging_state()
         if logging_active:
             await ctx.send(f"Logging is already active and logging to <#{current_channel_id}>.")
             await asyncio.sleep(3)
@@ -809,16 +806,19 @@ async def log(ctx, channel_id: int = None):
             await asyncio.sleep(3)
             await ctx.message.delete()
 
-# Stop logging when ..stlog is invoked
 @bot.command()
 async def stlog(ctx):
-    logging_active, _ = load_logging_state()
+    # Unpack all three return values from load_logging_state
+    logging_active, channel_id, logging_guild = load_logging_state()
+
+    # Check if the user is the owner
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
         return
     
+    # Stop logging if it's active
     if logging_active:
-        save_logging_state(False, None)
+        save_logging_state(False, None, None)  # Set logging to False and reset channel and guild to None
         await ctx.send("Logging stopped. No further interactions with the bot will be logged.")
         await asyncio.sleep(3)
         await ctx.message.delete()
@@ -836,7 +836,7 @@ async def on_message(message):
     logging_active, channel_id, logging_guild = load_logging_state()
 
     # Only proceed if logging is active and it's the correct guild
-    if logging_active and channel_id and logging_guild == str(message.guild.id):  # Ensure we compare to a string
+    if logging_active and channel_id and logging_guild == message.guild.id:
         # Proceed with logging the bot command
         command = message.content
 
@@ -860,7 +860,7 @@ async def on_message(message):
 # Log bot's message deletions
 @bot.event
 async def on_message_delete(message):
-    logging_active, channel_id = load_logging_state()
+    logging_active, channel_id, _ = load_logging_state()
     if message.author == bot.user and logging_active and channel_id:
         channel = bot.get_channel(channel_id)
         if channel:
@@ -873,7 +873,7 @@ async def on_message_delete(message):
 # Log bot's message edits
 @bot.event
 async def on_message_edit(before, after):
-    logging_active, channel_id = load_logging_state()
+    logging_active, channel_id, _ = load_logging_state()
     if before.author == bot.user and logging_active and channel_id:
         channel = bot.get_channel(channel_id)
         if channel:
@@ -887,7 +887,7 @@ async def on_message_edit(before, after):
 # Log when a reaction is added to the bot's message
 @bot.event
 async def on_reaction_add(reaction, user):
-    logging_active, channel_id = load_logging_state()
+    logging_active, channel_id, _ = load_logging_state()
     if reaction.message.author == bot.user and logging_active and channel_id:
         channel = bot.get_channel(channel_id)
         if channel:
