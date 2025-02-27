@@ -284,64 +284,64 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
 
 @bot.command(name="ban")
 @is_admin()
-async def ban(ctx, member: discord.Member = None, *, reason: str = None):
-    if not member or not reason:
-        await ctx.send("⚠ **Usage:** `..ban @user <reason>`\nExample: `..ban @user Harassment`")
+async def ban(ctx, user: discord.User = None, *, reason: str = "No reason provided"):
+    if not user:
+        await ctx.send("⚠ **Usage:** ..ban @user or ..ban <user_id> <reason>")
         await asyncio.sleep(3)
-        await ctx.message.delete() 
+        await ctx.message.delete()
         return
+    
+    guild = ctx.guild
+    try:
+        member = await guild.fetch_member(user.id)
+    except discord.NotFound:
+        member = None
 
     try:
-        await member.send(f"You have been banned from **{ctx.guild.name}**\nReason: {reason}")
+        await user.send(f"You have been banned from **{guild.name}**\nReason: {reason}")
     except discord.Forbidden:
         await ctx.send("⚠ Could not DM the user about their ban.")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
-    except Exception as e:
-        await ctx.send(f"⚠ Error sending DM: {str(e)}")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
-
+    
     try:
-        await member.ban(reason=reason)
+        await guild.ban(user, reason=reason)
         await ctx.message.add_reaction("✅")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
     except Exception as e:
-        await ctx.send(f"❌ Error banning member: {str(e)}")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
+        await ctx.send(f"❌ Error banning user: {str(e)}")
+    
+    await asyncio.sleep(3)
+    await ctx.message.delete()
 
 @bot.command(name="unban")
 @is_admin()
-async def unban(ctx, user: discord.User = None):
-    if not user:
-        await ctx.send("⚠ **Usage:** `..unban @user` or `..unban <user_id>`")
+async def unban(ctx, user_id: int = None):
+    if not user_id:
+        await ctx.send("⚠ **Usage:** ..unban <user_id>")
         await asyncio.sleep(3)
-        await ctx.message.delete() 
+        await ctx.message.delete()
+        return
+    
+    guild = ctx.guild
+    bans = await guild.bans()
+    banned_user = discord.utils.get(bans, user__id=user_id)
+
+    if not banned_user:
+        await ctx.send("⚠ This user is not banned.")
+        await asyncio.sleep(3)
+        await ctx.message.delete()
         return
 
     try:
-        await ctx.guild.unban(user)
+        await guild.unban(banned_user.user)
         await ctx.message.add_reaction("✅")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
-    except discord.NotFound:
-        await ctx.send("⚠ This user is not banned.")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
     except Exception as e:
         await ctx.send(f"⚠ An error occurred: {str(e)}")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
+    
+    await asyncio.sleep(3)
+    await ctx.message.delete()
 
 @bot.command()
 @is_admin()
