@@ -834,8 +834,11 @@ async def on_message(message):
         return  # Don't log messages sent by the bot itself
 
     logging_active, channel_id, logging_guild = load_logging_state()
-    
-    if logging_active and channel_id and logging_guild == message.guild.id and message.content.startswith(bot.command_prefix):
+
+    # Only proceed if logging is active
+    if logging_active and channel_id and logging_guild == message.guild.id:
+    # Continue logging logic
+
         # Check if it's a bot command and capture the full message content
         command = message.content
 
