@@ -804,14 +804,14 @@ async def on_message(message):
         return  # Don't log messages sent by the bot itself
 
     if load_logging_state() and message.content.startswith(bot.command_prefix):
-        # Check if it's a bot command
-        command = message.content.split()[0].lower()
+        # Check if it's a bot command and capture the full message content
+        command = message.content
 
         # Only log if it's a command starting with the bot's prefix
         channel = bot.get_channel(1344399177882271745)  # Replace with your log channel ID
         embed = discord.Embed(title="Bot Command Interaction Logged", color=discord.Color.green())
         embed.add_field(name="User", value=message.author.name)
-        embed.add_field(name="Command", value=command)
+        embed.add_field(name="Command", value=command)  # Log the full command, including args
         embed.add_field(name="Channel", value=message.channel.mention)
         embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         await channel.send(embed=embed)
@@ -827,7 +827,7 @@ async def on_message_delete(message):
         embed = discord.Embed(title="Bot Message Deleted", color=discord.Color.red())
         embed.add_field(name="Message", value=message.content or "No content")
         embed.add_field(name="Channel", value=message.channel.mention)
-        embed.add_field(name="Time", value=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         await channel.send(embed=embed)
 
 # Log bot's message edits
@@ -840,7 +840,7 @@ async def on_message_edit(before, after):
         embed.add_field(name="Before", value=before.content or "No content")
         embed.add_field(name="After", value=after.content or "No content")
         embed.add_field(name="Channel", value=before.channel.mention)
-        embed.add_field(name="Time", value=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         await channel.send(embed=embed)
 
 # Log when a reaction is added to the bot's message
@@ -854,7 +854,7 @@ async def on_reaction_add(reaction, user):
         embed.add_field(name="Reaction", value=str(reaction.emoji))
         embed.add_field(name="Message", value=reaction.message.content or "No content")
         embed.add_field(name="Channel", value=reaction.message.channel.mention)
-        embed.add_field(name="Time", value=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         await channel.send(embed=embed)
 
 
