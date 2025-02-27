@@ -39,7 +39,7 @@ def is_admin():
 def get_all_admins():
     return HARD_CODED_ADMINS | admins
 
-@bot.command(name="addadmin")
+@bot.command(name="aa")
 async def add_admin(ctx, member: discord.Member):
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
@@ -52,7 +52,7 @@ async def add_admin(ctx, member: discord.Member):
     await asyncio.sleep(1)
     await ctx.message.delete()
 
-@bot.command(name="removeadmin")
+@bot.command(name="ra")
 async def remove_admin(ctx, member: discord.Member):
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
@@ -327,7 +327,7 @@ async def w(ctx, member: discord.Member = None, *, reason: str = None):
         await ctx.message.delete() 
 
 @bot.command()
-async def coin(ctx):
+async def cf(ctx):
     # Define the possible outcomes
     outcomes = ['Heads', 'Tails']
     result = random.choice(outcomes)  # Randomly pick either Heads or Tails
@@ -378,7 +378,7 @@ async def help_command(ctx):
     description = ""
 
     # General commands
-    description += "\n`..info`: Displays info."
+    description += "\n`..i`: Displays info."
     description += "\n`..ping`: Latency check"
 
     # Admin commands (for admins)
@@ -397,13 +397,13 @@ async def help_command(ctx):
         description += "\n`..cs `: Clears sniped message"
         description += "\n`..r `: Lists roles"
         description += "\n`..afk <reason>`: Sets AFK status."
-        description += "\n`..coin `: Either heads or tails"
+        description += "\n`..cf `: Either heads or tails"
         description += "\n`..listadmins`: Lists all current admins."
 
     # Owner-specific commands (for the bot owner)
     if ctx.author.id == OWNER_ID:
-        description += "\n`..addadmin @user`: Adds a new admin."
-        description += "\n`..removeadmin @user`: Removes an admin."
+        description += "\n`..aa @user`: Adds a new admin."
+        description += "\n`..ra @user`: Removes an admin."
 
     embed = discord.Embed(
         title="Bot Commands",
