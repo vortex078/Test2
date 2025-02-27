@@ -369,11 +369,18 @@ async def w(ctx, member: discord.Member = None, *, reason: str = None):
 
 @bot.command()
 async def cf(ctx):
-    thinking_embed = discord.Embed(description="Thinking...", color=discord.Color.blurple())
+    thinking_embed = discord.Embed(description="Thinking.", color=discord.Color.blurple())
     thinking_message = await ctx.send(embed=thinking_embed)
-    
-    await asyncio.sleep(3)
-    
+
+  
+    for _ in range(3):
+        await asyncio.sleep(1)
+        thinking_embed.description = "Thinking.."
+        await thinking_message.edit(embed=thinking_embed)
+        await asyncio.sleep(1)
+        thinking_embed.description = "Thinking..."
+        await thinking_message.edit(embed=thinking_embed)
+
     outcomes = ['Heads', 'Tails']
     result = random.choice(outcomes)
 
