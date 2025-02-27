@@ -252,20 +252,23 @@ async def set_or_show_rules(ctx, *, rules_text: str = None):
 @is_admin()
 async def kick(ctx, member: discord.Member = None, *, reason: str = None):
     if not member or not reason:
-        await ctx.send("⚠ **Usage:** `..kick @user <reason>`\nExample: `..kick @user Spamming`")
+        msg = await ctx.send("⚠ **Usage:** `..kick @user <reason>`\nExample: `..kick @user Spamming`")
         await asyncio.sleep(3)
+        await msg.delete()
         await ctx.message.delete() 
         return
 
     try:
         await member.send(f"You have been kicked from **{ctx.guild.name}**\nReason: {reason}")
     except discord.Forbidden:
-        await ctx.send("⚠ Could not DM the user about their kick.")
+        msg = await ctx.send("⚠ Could not DM the user about their kick.")
         await asyncio.sleep(3)
+        await msg.delete()
         await ctx.message.delete() 
     except Exception as e:
-        await ctx.send(f"⚠ Error sending DM: {str(e)}")
+        msg = await ctx.send(f"⚠ Error sending DM: {str(e)}")
         await asyncio.sleep(3)
+        await msg.delete()
         await ctx.message.delete() 
 
     try:
@@ -278,8 +281,9 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
         await asyncio.sleep(3)
         await ctx.message.delete() 
     except Exception as e:
-        await ctx.send(f"❌ Error kicking member: {str(e)}")
+        msg = await ctx.send(f"❌ Error kicking member: {str(e)}")
         await asyncio.sleep(3)
+        await msg.delete()
         await ctx.message.delete() 
 
 @bot.command(name="ban")
