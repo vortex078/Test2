@@ -117,13 +117,23 @@ async def list_admins(ctx):
     hardcoded_admins = []
     temp_admins = []
 
+    async def get_username(user_id):
+        member = ctx.guild.get_member(user_id)
+        if member:
+            return member.name  # If user is in server, return their name
+        try:
+            user = await bot.fetch_user(user_id)  # Fetch from Discord if not in server
+            return user.name
+        except discord.NotFound:
+            return f"Unknown ({user_id})"  # If user doesn't exist
+
     for admin_id in HARD_CODED_ADMINS:
-        member = ctx.guild.get_member(admin_id)
-        hardcoded_admins.append(member.name if member else f"Unknown ({admin_id})")
+        username = await get_username(admin_id)
+        hardcoded_admins.append(username)
 
     for admin_id in temporary_admins:
-        member = ctx.guild.get_member(admin_id)
-        temp_admins.append(member.name if member else f"Unknown ({admin_id})")
+        username = await get_username(admin_id)
+        temp_admins.append(username)
 
     hardcoded_text = "\n".join(hardcoded_admins) if hardcoded_admins else "None"
     temp_text = "\n".join(temp_admins) if temp_admins else "None"
@@ -132,6 +142,7 @@ async def list_admins(ctx):
     embed.description = f"🔸 **Hardcoded Admins**\n{hardcoded_text}\n\n🔹 **Temporary Admins**\n{temp_text}"
 
     await ctx.send(embed=embed)
+
 
 @bot.event
 async def on_ready():
