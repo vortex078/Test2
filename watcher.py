@@ -32,10 +32,10 @@ def load_hardcoded_admins():
     except (FileNotFoundError, json.JSONDecodeError):
         return set()
 
-def save_hardcoded_admins(admin_list):
-    """Save hardcoded admins to the JSON file."""
+def save_hardcoded_admins():
+    """Save the hardcoded admins to the JSON file."""
     with open(ADMIN_FILE, "w") as f:
-        json.dump(list(admin_list), f, indent=4)
+        json.dump(list(HARD_CODED_ADMINS), f)
 
 # Load hardcoded admins from JSON
 HARD_CODED_ADMINS = load_hardcoded_admins()
