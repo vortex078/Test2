@@ -431,6 +431,11 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
 async def t(ctx, member: discord.Member, duration: str):
 
     try:
+        # Check if the member is the bot owner
+        if member.id == OWNER_ID:
+            await ctx.message.add_reaction(":warning:")
+            return
+        
         # Parse the duration
         match = re.match(r"(\d+)([smh])", duration.lower())  # Match digits followed by s/m/h
         if not match:
