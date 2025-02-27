@@ -286,8 +286,9 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
 @is_admin()
 async def ban(ctx, user: discord.User = None, *, reason: str = "No reason provided"):
     if not user:
-        await ctx.send("⚠ **Usage:** ..ban @user or ..ban <user_id> <reason>")
+        msg = await ctx.send("⚠ **Usage:** ..ban @user or ..ban <user_id> <reason>")
         await asyncio.sleep(3)
+        await msg.delete()
         await ctx.message.delete()
         return
     
@@ -300,16 +301,18 @@ async def ban(ctx, user: discord.User = None, *, reason: str = "No reason provid
     try:
         await user.send(f"You have been banned from **{guild.name}**\nReason: {reason}")
     except discord.Forbidden:
-        await ctx.send("⚠ Could not DM the user about their ban.")
-    
+        msg = await ctx.send("⚠ Could not DM the user about their ban.")
+        await asyncio.sleep(3)
+        await msg.delete()
     try:
         await guild.ban(user, reason=reason)
         await ctx.message.add_reaction("✅")
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")
     except Exception as e:
-        await ctx.send(f"❌ Error banning user: {str(e)}")
-    
+        msg = await ctx.send(f"❌ Error banning user: {str(e)}")
+        await asyncio.sleep(3)
+        await msg.delete()
     await asyncio.sleep(3)
     await ctx.message.delete()
 
@@ -317,8 +320,9 @@ async def ban(ctx, user: discord.User = None, *, reason: str = "No reason provid
 @is_admin()
 async def unban(ctx, user_id: int = None):
     if not user_id:
-        await ctx.send("⚠ **Usage:** ..unban <user_id>")
+        msg = await ctx.send("⚠ **Usage:** ..unban <user_id>")
         await asyncio.sleep(3)
+        await msg.delete()
         await ctx.message.delete()
         return
     
@@ -330,8 +334,9 @@ async def unban(ctx, user_id: int = None):
             break
 
     if not banned_user:
-        await ctx.send("⚠ This user is not banned.")
+        msg = await ctx.send("⚠ This user is not banned.")
         await asyncio.sleep(3)
+        await msg.delete()
         await ctx.message.delete()
         return
 
