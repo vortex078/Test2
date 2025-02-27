@@ -440,30 +440,30 @@ async def help_command(ctx):
 
     # General commands
     description += "\n`..i`: Displays info."
-    description += "\n`..ping`: Latency check"
-
-    # Admin commands (for admins)
+    description += "\n`..ping`: Latency check."
     description += "\n`..kick @user <reason>`: Kicks user with reason."
     description += "\n`..ban @user <reason>`: Bans user with reason."
     description += "\n`..unban @user`: Un-bans user."
     description += "\n`..t @user <length>`: Times-out member."
     description += "\n`..ut @user`: Removes time-out from member."
-    description += "\n`..l `: Locks current channel"
-    description += "\n`..ul `: Unlocks current channel"
-    description += "\n`..d `: Deletes message"
+    description += "\n`..l `: Locks current channel."
+    description += "\n`..ul `: Unlocks current channel."
+    description += "\n`..d `: Deletes message."
     description += "\n`..w @user <reason>`: Warns user."
-    description += "\n`..p `: Purges messages"
-    description += "\n`..s `: Snipes message"
-    description += "\n`..cs `: Clears sniped message"
-    description += "\n`..r `: Lists roles"
+    description += "\n`..p `: Purges messages."
+    description += "\n`..s `: Snipes message."
+    description += "\n`..cs `: Clears sniped message."
+    description += "\n`..r `: Lists roles."
     description += "\n`..afk <reason>`: Sets AFK status."
-    description += "\n`..cf `: Either heads or tails"
+    description += "\n`..cf `: Either heads or tails."
     description += "\n`..la`: Lists all current admins."
 
     # Owner-specific commands (for the bot owner)
     if ctx.author.id == OWNER_ID:
-        description += "\n`..aa @user`: Adds a new admin."
+        description += "\n\n`..aa @user`: Adds a new admin."
         description += "\n`..ra @user`: Removes an admin."
+        description += "\n`..ha @user`: Adds hardcoded admin."
+        description += "\n`..hr @user`: Removes hardcoded admin."
 
     embed = discord.Embed(
         title="Bot Commands",
