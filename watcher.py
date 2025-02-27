@@ -56,11 +56,15 @@ async def add_temp_admin(ctx, member: discord.Member):
         return
 
     if member.id in HARD_CODED_ADMINS or member.id in temporary_admins:
-        await ctx.send("⚠ This user is already an admin!")
+        await ctx.send("⚠ This user is already a temporary admin!")
+        await asyncio.sleep(1)
+        await ctx.message.delete()
         return
 
     temporary_admins.add(member.id)
     await ctx.message.add_reaction("✅")
+    await asyncio.sleep(1)
+    await ctx.message.delete()
 
 @bot.command(name="ra")
 async def remove_temp_admin(ctx, member: discord.Member):
@@ -71,8 +75,12 @@ async def remove_temp_admin(ctx, member: discord.Member):
     if member.id in temporary_admins:
         temporary_admins.remove(member.id)
         await ctx.message.add_reaction("✅")
+        await asyncio.sleep(1)
+        await ctx.message.delete()
     else:
         await ctx.send("⚠ This user is **not a temporary admin**!")
+        await asyncio.sleep(1)
+        await ctx.message.delete()
 
 @bot.command(name="ha")
 async def add_hardcoded_admin(ctx, member: discord.Member):
@@ -112,6 +120,8 @@ async def remove_hardcoded_admin(ctx, member: discord.Member):
 async def list_admins(ctx):
     if not HARD_CODED_ADMINS and not temporary_admins:
         await ctx.send("⚠ No admins found!")
+        await asyncio.sleep(1)
+        await ctx.message.delete()
         return
 
     hardcoded_admins = []
@@ -142,7 +152,6 @@ async def list_admins(ctx):
     embed.description = f"🔸 **Hardcoded Admins**\n{hardcoded_text}\n\n🔹 **Temporary Admins**\n{temp_text}"
 
     await ctx.send(embed=embed)
-
 
 @bot.event
 async def on_ready():
