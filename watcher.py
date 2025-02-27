@@ -818,15 +818,16 @@ async def on_message(message):
 @bot.event
 async def on_message_delete(message):
     if message.author.bot or not message.content:
-        return  # Ignore bot messages and empty messages
+        return
 
-    # Store the last deleted message per channel
+    # Store deleted message for sniping
     sniped_messages[message.channel.id] = (message.author, message.content)
 
-    # Logging system (if enabled)
-    logging_active, channel_id, logging_guild = load_logging_state()
-    if logging_active and channel_id and logging_guild == message.guild.id:
-        log_channel = bot.get_channel(channel_id)
+    # Fetch logging settings for the server
+    logging_active, channel_id = load_logging_state(message.guild.id)  # ✅ Fix: Expect only 2 values
+
+    if logging_active and channel_id:
+        log_channel = bot.get_channel(int(channel_id))
         if log_channel:
             embed = discord.Embed(title="Message Deleted", color=discord.Color.red())
             embed.add_field(name="User", value=message.author.name)
