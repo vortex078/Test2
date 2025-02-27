@@ -481,27 +481,10 @@ async def help_command(ctx):
 @bot.command(name="r")
 @is_admin()
 async def r(ctx, action: str = None, role_name: str = None, member: discord.Member = None):
-    if action is None:
-        roles = ctx.guild.roles
-        embed = discord.Embed(title="Roles in the server", color=discord.Color.blue())
-
-        admin_roles = [role for role in roles if "admin" in role.name.lower()]
-        member_roles = [role for role in roles if "member" in role.name.lower()]
-        other_roles = [role for role in roles if role not in admin_roles and role not in member_roles]
-
-        if admin_roles:
-            embed.add_field(name="Admin Roles", value="\n".join([role.name for role in admin_roles]), inline=False)
-        if member_roles:
-            embed.add_field(name="Member Roles", value="\n".join([role.name for role in member_roles]), inline=False)
-        if other_roles:
-            embed.add_field(name="Other Roles", value="\n".join([role.name for role in other_roles]), inline=False)
-
-        await ctx.send(embed=embed)
-        return
-
     if action.lower() == "add" and role_name and member:
-        # Assign a role to a member
-        role = discord.utils.get(ctx.guild.roles, name=role_name)
+        # Try to get role by name or ID
+        role = discord.utils.get(ctx.guild.roles, name=role_name) or discord.utils.get(ctx.guild.roles, id=int(role_name) if role_name.isdigit() else None)
+        
         if role:
             try:
                 await member.add_roles(role)
@@ -526,8 +509,9 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
             await ctx.message.delete()
     
     elif action.lower() == "rem" and role_name and member:
-        # Remove a role from a member
-        role = discord.utils.get(ctx.guild.roles, name=role_name)
+        # Try to get role by name or ID
+        role = discord.utils.get(ctx.guild.roles, name=role_name) or discord.utils.get(ctx.guild.roles, id=int(role_name) if role_name.isdigit() else None)
+        
         if role:
             try:
                 await member.remove_roles(role)
@@ -550,6 +534,7 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
             await asyncio.sleep(3)
             await msg.delete()
             await ctx.message.delete()
+
 
     else:
         msg = await ctx.send("❌ Invalid usage. Use `..r` to list roles, `..r assign <role_name> @member` to assign a role, or `..r rem <role_name> @member` to remove a role.")
