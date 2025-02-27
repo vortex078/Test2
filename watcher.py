@@ -37,12 +37,10 @@ def is_admin():
     return commands.check(predicate)
 
 def get_all_admins():
-    """Returns a set of all current admins (both hardcoded and dynamic)."""
     return HARD_CODED_ADMINS | admins
 
 @bot.command(name="addadmin")
 async def add_admin(ctx, member: discord.Member):
-    """Allows the OWNER to add a new admin (including re-adding hardcoded ones)."""
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
         return
@@ -52,7 +50,6 @@ async def add_admin(ctx, member: discord.Member):
 
 @bot.command(name="removeadmin")
 async def remove_admin(ctx, member: discord.Member):
-    """Allows the OWNER to remove any admin, including hardcoded ones."""
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
         return
@@ -65,7 +62,6 @@ async def remove_admin(ctx, member: discord.Member):
 
 @bot.command(name="listadmins")
 async def list_admins(ctx):
-    """Displays the list of current admins in an embed without pinging them."""
     if not admins:
         await ctx.send("⚠ No admins found!")
         return
@@ -94,7 +90,6 @@ afk_users = {}
 
 @bot.command()
 async def afk(ctx, *, reason: str = "AFK"):
-    """Sets a user as AFK with a reason and time."""
     # Store the time when AFK is set
     afk_users[ctx.author.id] = {"reason": reason, "time": time.time()}
 
@@ -106,7 +101,6 @@ async def afk(ctx, *, reason: str = "AFK"):
 
 @bot.event
 async def on_message(message):
-    """Checks if an AFK user sends a message or is mentioned."""
     if message.author.id in afk_users:
         # Calculate how long ago the user set their AFK status
         afk_time = afk_users[message.author.id]["time"]
@@ -142,10 +136,9 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-@bot.command(name="info")
+@bot.command(name="i")
 @is_admin()  # Admins only
 async def set_or_show_rules(ctx, *, rules_text: str = None):
-    """Sets or displays the server info."""
     if rules_text:
         # If there is rules_text, we are setting it
         rules_storage[ctx.guild.id] = rules_text
@@ -198,7 +191,6 @@ async def set_or_show_rules(ctx, *, rules_text: str = None):
 @bot.command(name="kick")
 @is_admin()
 async def kick(ctx, member: discord.Member = None, *, reason: str = None):
-    """Kicks a member from the server, requiring a reason."""
     if not member or not reason:
         await ctx.send("⚠ **Usage:** `..kick @user <reason>`\nExample: `..kick @user Spamming`")
         await asyncio.sleep(3)
@@ -236,7 +228,6 @@ async def kick(ctx, member: discord.Member = None, *, reason: str = None):
 @bot.command(name="ban")
 @is_admin()
 async def ban(ctx, member: discord.Member = None, *, reason: str = None):
-    """Bans a member from the server, requiring a reason."""
     if not member or not reason:
         await ctx.send("⚠ **Usage:** `..ban @user <reason>`\nExample: `..ban @user Harassment`")
         await asyncio.sleep(3)
@@ -274,7 +265,6 @@ async def ban(ctx, member: discord.Member = None, *, reason: str = None):
 @bot.command(name="unban")
 @is_admin()
 async def unban(ctx, user: discord.User = None):
-    """Unbans a member from the server by user ID."""
     if not user:
         await ctx.send("⚠ **Usage:** `..unban @user` or `..unban <user_id>`")
         await asyncio.sleep(3)
@@ -303,10 +293,6 @@ async def unban(ctx, user: discord.User = None):
 @bot.command()
 @is_admin()
 async def w(ctx, member: discord.Member = None, *, reason: str = None):
-    """
-    Warns a member and DMs them the reason.
-    Usage: ..warn @member <reason>
-    """
     if member is None:
         await ctx.send("❌ Provide member.")
         await asyncio.sleep(3)
@@ -343,9 +329,6 @@ async def coin(ctx):
 @bot.command()
 @is_admin()
 async def d(ctx):
-    """
-    Deletes the message that you reply to, and reacts with ✅ if successful, ❌ if not.
-    """
     if not ctx.message.reference:
         await ctx.send("❌ You need to reply to a message to delete it.")
         await asyncio.sleep(3)
@@ -379,9 +362,8 @@ async def d(ctx):
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
-@bot.command(name="Help")
+@bot.command(name="help")
 async def help_command(ctx):
-    """Displays all available bot commands."""
     await ctx.message.delete() 
     description = ""
 
@@ -424,12 +406,7 @@ async def help_command(ctx):
 @bot.command()
 @is_admin()
 async def r(ctx, action: str = None, role_name: str = None, member: discord.Member = None):
-    """
-    Display all roles or assign roles to a member.
-    Usage:
-    - ..r -> Displays all roles in sections.
-    - ..r assign <role_name> <@member> -> Assigns the specified role to the mentioned member.
-    """
+
     if action is None:
         # Display all roles in separate sections
         roles = ctx.guild.roles
@@ -452,9 +429,7 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
 @bot.command()
 @is_admin()
 async def t(ctx, member: discord.Member, duration: str):
-    """
-    Timeout a member for a given duration. The duration can be specified in seconds (s), minutes (m), or hours (h).
-    """
+
     try:
         # Parse the duration
         match = re.match(r"(\d+)([smh])", duration.lower())  # Match digits followed by s/m/h
@@ -495,9 +470,7 @@ async def t(ctx, member: discord.Member, duration: str):
 @bot.command()
 @is_admin()
 async def ut(ctx, member: discord.Member):
-    """
-    Untimeout a member.
-    """
+
     try:
         await member.timeout(None)  # Remove timeout
 
@@ -569,9 +542,7 @@ async def cs(ctx):
 @bot.command()
 @is_admin()
 async def p(ctx, amount: int = None):
-    """Purge messages with auto-deleting confirmation messages.
-       If used as a reply, it purges up to and including the replied message.
-    """
+
     if ctx.message.reference:  # Check if the command was used as a reply
         try:
             ref_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
@@ -716,4 +687,3 @@ async def on_presence_update(before, after):
 import os
 TOKEN = os.getenv("watch")
 bot.run(TOKEN)
-
