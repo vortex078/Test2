@@ -820,11 +820,10 @@ async def on_message_delete(message):
     if message.author.bot or not message.content:
         return
 
-    # Store deleted message for sniping
     sniped_messages[message.channel.id] = (message.author, message.content)
 
-    # Fetch logging settings for the server
-    logging_active, channel_id = load_logging_state(message.guild.id)  # ✅ Fix: Expect only 2 values
+
+    logging_active, channel_id = load_logging_state(message.guild.id)
 
     if logging_active and channel_id:
         log_channel = bot.get_channel(int(channel_id))
