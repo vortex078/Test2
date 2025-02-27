@@ -499,19 +499,31 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
         await ctx.send(embed=embed)
         return
 
-    if action.lower() == "assign" and role_name and member:
+    if action.lower() == "add" and role_name and member:
         # Assign a role to a member
         role = discord.utils.get(ctx.guild.roles, name=role_name)
         if role:
             try:
                 await member.add_roles(role)
-                await ctx.send(f"✅ Assigned the role `{role.name}` to {member.mention}.")
+                msg = await ctx.send(f"✅ Assigned the role `{role.name}` to {member.mention}.")
+                await asyncio.sleep(3)
+                await msg.delete()
+                await ctx.message.delete()
             except discord.Forbidden:
-                await ctx.send("❌ I do not have permission to assign roles.")
+                msg = await ctx.send("❌ I do not have permission to assign roles.")
+                await asyncio.sleep(3)
+                await msg.delete()
+                await ctx.message.delete()
             except discord.HTTPException as e:
-                await ctx.send(f"⚠️ Error assigning role: {e}")
+                msg = await ctx.send(f"⚠️ Error assigning role: {e}")
+                await asyncio.sleep(3)
+                await msg.delete()
+                await ctx.message.delete()
         else:
-            await ctx.send(f"❌ Role `{role_name}` not found.")
+            msg = await ctx.send(f"❌ Role `{role_name}` not found.")
+            await asyncio.sleep(3)
+            await msg.delete()
+            await ctx.message.delete()
     
     elif action.lower() == "rem" and role_name and member:
         # Remove a role from a member
@@ -519,16 +531,31 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
         if role:
             try:
                 await member.remove_roles(role)
-                await ctx.send(f"✅ Removed the role `{role.name}` from {member.mention}.")
+                msg = await ctx.send(f"✅ Removed the role `{role.name}` from {member.mention}.")
+                await asyncio.sleep(3)
+                await msg.delete()
+                await ctx.message.delete()
             except discord.Forbidden:
-                await ctx.send("❌ I do not have permission to remove roles.")
+                msg = await ctx.send("❌ I do not have permission to remove roles.")
+                await asyncio.sleep(3)
+                await msg.delete()
+                await ctx.message.delete()
             except discord.HTTPException as e:
-                await ctx.send(f"⚠️ Error removing role: {e}")
+                msg = await ctx.send(f"⚠️ Error removing role: {e}")
+                await asyncio.sleep(3)
+                await msg.delete()
+                await ctx.message.delete()
         else:
-            await ctx.send(f"❌ Role `{role_name}` not found.")
+            msg = await ctx.send(f"❌ Role `{role_name}` not found.")
+            await asyncio.sleep(3)
+            await msg.delete()
+            await ctx.message.delete()
 
     else:
-        await ctx.send("❌ Invalid usage. Use `..r` to list roles, `..r assign <role_name> @member` to assign a role, or `..r rem <role_name> @member` to remove a role.")
+        msg = await ctx.send("❌ Invalid usage. Use `..r` to list roles, `..r assign <role_name> @member` to assign a role, or `..r rem <role_name> @member` to remove a role.")
+        await asyncio.sleep(3)
+        await msg.delete()
+        await ctx.message.delete()
 
 @bot.command()
 @is_admin()
