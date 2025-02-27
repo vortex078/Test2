@@ -559,47 +559,28 @@ sniped_messages = {}
 async def on_message_delete(message):
     if message.author.bot:
         return
-    sniped_messages[message.channel.id] = message
-    print(f"Deleted message in {message.channel.name}: {message.content}")
+    sniped_messages[message.channel.id] = (message.author, message.content)
 
-sniped_messages = {}
 
-@bot.command()
-async def s(ctx):
+@bot.command(name="s")
+async def snipe(ctx):
     if ctx.channel.id in sniped_messages:
-        sniped_message = sniped_messages[ctx.channel.id]
-
-        embed = discord.Embed(
-            title="Sniped Message",
-            description=sniped_message.content if sniped_message.content else "*[No Text]*",
-            color=discord.Color(0x000000),
-            timestamp=sniped_message.created_at
-        )
-        embed.set_author(name=sniped_message.author, icon_url=sniped_message.author.avatar.url if sniped_message.author.avatar else None)
-        embed.set_footer(text=f"Deleted in #{sniped_message.channel.name}")
-
-        if sniped_message.attachments:
-            attachment = sniped_message.attachments[0]
-            embed.set_image(url=attachment.url)
-
+        author, content = sniped_messages[ctx.channel.id]
+        embed = discord.Embed(title="Sniped Message", description=content, color=discord.Color.red())
+        embed.set_footer(text=f"Deleted message from {author}")
         await ctx.send(embed=embed)
     else:
-        await ctx.send("Nothing found.")
+        await ctx.send("There's nothing to snipe!")
 
-# Clear sniped message from the current channel
-@bot.command()
-async def cs(ctx):
+
+@bot.command(name="cs")
+async def clear_snipe(ctx):
     if ctx.channel.id in sniped_messages:
         del sniped_messages[ctx.channel.id]
-        await ctx.message.add_reaction("✅")
-        await asyncio.sleep(3)
-        await ctx.message.delete() 
+        await ctx.send("Sniped message cleared!")
     else:
-        await ctx.message.add_reaction("❌")
-        await asyncio.sleep(3)
-        await ctx.message.delete()
+        await ctx.send("There's nothing to clear!")
 
-        
 @bot.command()
 @is_admin()
 async def p(ctx, amount: int = None):
