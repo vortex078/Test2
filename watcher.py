@@ -464,6 +464,8 @@ async def help_command(ctx):
         description += "\n`..ra @user`: Removes an admin."
         description += "\n`..ha @user`: Adds hardcoded admin."
         description += "\n`..hr @user`: Removes hardcoded admin."
+        description += "\n`..log <channel_id>`: Starts logging."
+        description += "\n`..stlog `: Stops logging."
 
     embed = discord.Embed(
         title="Bot Commands",
