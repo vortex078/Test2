@@ -373,11 +373,14 @@ async def cf(ctx):
     thinking_message = await ctx.send(embed=thinking_embed)
 
   
-    for _ in range(3):
-        await asyncio.sleep(1)
+    for _ in range(5):
+        await asyncio.sleep(0.5)
+        thinking_embed.description = "Thinking."
+        await thinking_message.edit(embed=thinking_embed)
+        await asyncio.sleep(0.5)
         thinking_embed.description = "Thinking.."
         await thinking_message.edit(embed=thinking_embed)
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
         thinking_embed.description = "Thinking..."
         await thinking_message.edit(embed=thinking_embed)
 
