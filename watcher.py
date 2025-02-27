@@ -369,12 +369,16 @@ async def w(ctx, member: discord.Member = None, *, reason: str = None):
 
 @bot.command()
 async def cf(ctx):
-
+    thinking_embed = discord.Embed(description="Thinking...", color=discord.Color.blurple())
+    thinking_message = await ctx.send(embed=thinking_embed)
+    
+    await asyncio.sleep(3)
+    
     outcomes = ['Heads', 'Tails']
     result = random.choice(outcomes)
-    
-    await ctx.message.delete() 
-    await ctx.send(f'{ctx.author.mention} It\'s {result}!')
+
+    thinking_embed.description = f'{ctx.author.mention}, It\'s {result}!'
+    await thinking_message.edit(embed=thinking_embed)
 
 @bot.command()
 @is_admin()
