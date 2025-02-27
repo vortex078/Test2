@@ -6,12 +6,14 @@ import random
 import time
 import re
 import json
+from datetime import datetime
 
 intents = discord.Intents.default()
 intents.members = True
 intents.messages = True
 intents.message_content = True
 intents.presences = True
+intents.guilds = True
 
 bot = commands.Bot(command_prefix="..", intents=intents, help_command=None)
 watched_users = set()
@@ -25,7 +27,6 @@ OWNER_ID = 707584409531842623
 ADMIN_FILE = "admins.json"
 
 def load_hardcoded_admins():
-    """Load hardcoded admins from the JSON file."""
     try:
         with open(ADMIN_FILE, "r") as f:
             return set(json.load(f))
@@ -33,7 +34,6 @@ def load_hardcoded_admins():
         return set()
 
 def save_hardcoded_admins():
-    """Save the hardcoded admins to the JSON file."""
     with open(ADMIN_FILE, "w") as f:
         json.dump(list(HARD_CODED_ADMINS), f)
 
@@ -760,6 +760,188 @@ async def on_presence_update(before, after):
         except discord.HTTPException as e:
             print(f"⚠️ Error sending DM: {e}")
 
+
+LOG_CHANNEL_ID = 1344399177882271745  # Your logging channel ID
+LOGGING_STATE_FILE = "logging_state.json"  # File to store logging state
+
+# Default logging state (False means logging is off)
+logging_active = False
+
+# Load logging state from file
+def load_logging_state():
+    global logging_active
+    try:
+        with open(LOGGING_STATE_FILE, 'r') as f:
+            data = json.load(f)
+            logging_active = data.get("logging_active", False)
+    except (FileNotFoundError, json.JSONDecodeError):
+        logging_active = False  # Default to logging off if file doesn't exist or is corrupted
+
+# Save logging state to file
+def save_logging_state():
+    with open(LOGGING_STATE_FILE, 'w') as f:
+        json.dump({"logging_active": logging_active}, f)
+
+# Start logging command
+@bot.command(name="log")
+async def start_logging(ctx):
+    global logging_active
+    if not logging_active:
+        logging_active = True
+        save_logging_state()  # Save the state to file
+        await ctx.send("✅ Logging started! All events will be logged.")
+    else:
+        await ctx.send("⚠️ Logging is already active.")
+
+# Stop logging command
+@bot.command(name="stlog")
+async def stop_logging(ctx):
+    global logging_active
+    if logging_active:
+        logging_active = False
+        save_logging_state()  # Save the state to file
+        await ctx.send("✅ Logging stopped! No further events will be logged.")
+    else:
+        await ctx.send("⚠️ Logging is not active.")
+
+# Helper function to send logs to the log channel
+async def send_log(embed):
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)
+    if log_channel:
+        await log_channel.send(embed=embed)
+
+# Logging message edits
+@bot.event
+async def on_message_edit(before, after):
+    if logging_active and before.content != after.content:
+        embed = discord.Embed(
+            title="Message Edited",
+            description=f"**Author**: {after.author.mention}\n**Before**: {before.content}\n**After**: {after.content}",
+            color=discord.Color.yellow()
+        )
+        await send_log(embed)
+
+# Logging message deletions
+@bot.event
+async def on_message_delete(message):
+    if logging_active:
+        embed = discord.Embed(
+            title="Message Deleted",
+            description=f"**Author**: {message.author.mention}\n**Content**: {message.content}",
+            color=discord.Color.red()
+        )
+        await send_log(embed)
+
+# Logging member joins
+@bot.event
+async def on_member_join(member):
+    if logging_active:
+        embed = discord.Embed(
+            title="Member Joined",
+            description=f"**Member**: {member.mention}\n**Joined at**: {member.joined_at}",
+            color=discord.Color.green()
+        )
+        await send_log(embed)
+
+# Logging member leaves
+@bot.event
+async def on_member_remove(member):
+    if logging_active:
+        embed = discord.Embed(
+            title="Member Left",
+            description=f"**Member**: {member.mention}\n**Left at**: {datetime.utcnow()}",
+            color=discord.Color.red()
+        )
+        await send_log(embed)
+
+# Logging role assignments
+@bot.event
+async def on_member_update(before, after):
+    if logging_active:
+        added_roles = [role.name for role in after.roles if role not in before.roles]
+        removed_roles = [role.name for role in before.roles if role not in after.roles]
+
+        if added_roles:
+            embed = discord.Embed(
+                title="Role Added",
+                description=f"**Member**: {after.mention}\n**Added roles**: {', '.join(added_roles)}",
+                color=discord.Color.blue()
+            )
+            await send_log(embed)
+
+        if removed_roles:
+            embed = discord.Embed(
+                title="Role Removed",
+                description=f"**Member**: {after.mention}\n**Removed roles**: {', '.join(removed_roles)}",
+                color=discord.Color.orange()
+            )
+            await send_log(embed)
+
+# Logging bans and unbans
+@bot.event
+async def on_member_ban(guild, user):
+    if logging_active:
+        embed = discord.Embed(
+            title="Member Banned",
+            description=f"**User**: {user.mention}\n**Banned at**: {datetime.utcnow()}",
+            color=discord.Color.red()
+        )
+        await send_log(embed)
+
+@bot.event
+async def on_member_unban(guild, user):
+    if logging_active:
+        embed = discord.Embed(
+            title="Member Unbanned",
+            description=f"**User**: {user.mention}\n**Unbanned at**: {datetime.utcnow()}",
+            color=discord.Color.green()
+        )
+        await send_log(embed)
+
+# Logging nickname changes
+@bot.event
+async def on_member_update(before, after):
+    if logging_active and before.nick != after.nick:
+        embed = discord.Embed(
+            title="Nickname Changed",
+            description=f"**User**: {after.mention}\n**Before**: {before.nick or 'None'}\n**After**: {after.nick or 'None'}",
+            color=discord.Color.purple()
+        )
+        await send_log(embed)
+
+# Logging channel creation, deletion, and updates
+@bot.event
+async def on_guild_channel_create(channel):
+    if logging_active:
+        embed = discord.Embed(
+            title="Channel Created",
+            description=f"**Channel Name**: {channel.name}\n**Channel Type**: {channel.type}",
+            color=discord.Color.green()
+        )
+        await send_log(embed)
+
+@bot.event
+async def on_guild_channel_delete(channel):
+    if logging_active:
+        embed = discord.Embed(
+            title="Channel Deleted",
+            description=f"**Channel Name**: {channel.name}\n**Channel Type**: {channel.type}",
+            color=discord.Color.red()
+        )
+        await send_log(embed)
+
+@bot.event
+async def on_guild_channel_update(before, after):
+    if logging_active:
+        embed = discord.Embed(
+            title="Channel Updated",
+            description=f"**Channel Name**: {after.name}\n**Before**: {before.name}\n**After**: {after.name}",
+            color=discord.Color.blue()
+        )
+        await send_log(embed)
+
+# Load the logging state when the bot starts
+load_logging_state()
 
 import os
 TOKEN = os.getenv("watch")
