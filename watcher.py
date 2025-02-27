@@ -68,7 +68,7 @@ async def remove_admin(ctx, member: discord.Member):
         await asyncio.sleep(2)
         await ctx.message.delete()
 
-@bot.command(name="listadmins")
+@bot.command(name="la")
 async def list_admins(ctx):
     if not admins:
         await ctx.send("⚠ No admins found!")
@@ -398,7 +398,7 @@ async def help_command(ctx):
         description += "\n`..r `: Lists roles"
         description += "\n`..afk <reason>`: Sets AFK status."
         description += "\n`..cf `: Either heads or tails"
-        description += "\n`..listadmins`: Lists all current admins."
+        description += "\n`..la`: Lists all current admins."
 
     # Owner-specific commands (for the bot owner)
     if ctx.author.id == OWNER_ID:
