@@ -477,10 +477,10 @@ async def help_command(ctx):
 
     await ctx.send(embed=embed)
 
-@bot.command()
+
+@bot.command(name="r")
 @is_admin()
 async def r(ctx, action: str = None, role_name: str = None, member: discord.Member = None):
-
     if action is None:
         roles = ctx.guild.roles
         embed = discord.Embed(title="Roles in the server", color=discord.Color.blue())
@@ -497,6 +497,24 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
             embed.add_field(name="Other Roles", value="\n".join([role.name for role in other_roles]), inline=False)
 
         await ctx.send(embed=embed)
+        return
+
+    elif action.lower() == "assign" and role_name and member:
+        # Assign a role to a member
+        role = discord.utils.get(ctx.guild.roles, name=role_name)
+        if role:
+            try:
+                await member.add_roles(role)
+                await ctx.send(f"✅ Assigned the role `{role.name}` to {member.mention}.")
+            except discord.Forbidden:
+                await ctx.send("❌ I do not have permission to assign roles.")
+            except discord.HTTPException as e:
+                await ctx.send(f"⚠️ Error assigning role: {e}")
+        else:
+            await ctx.send(f"❌ Role `{role_name}` not found.")
+    else:
+        await ctx.send("❌ Invalid usage. Use `..r` to list roles or `..r assign <role_name> @member` to assign a role.")
+        
 
 @bot.command()
 @is_admin()
