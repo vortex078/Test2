@@ -434,6 +434,8 @@ async def t(ctx, member: discord.Member, duration: str):
         # Check if the member is the bot owner
         if member.id == OWNER_ID:
             await ctx.message.add_reaction("⚠️")
+            await asyncio.sleep(0.5)
+            await ctx.message.delete()
             return
         
         # Parse the duration
