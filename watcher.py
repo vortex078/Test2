@@ -780,34 +780,41 @@ def save_logging_state(state: bool, channel_id: int):
 # Start logging when ..log is invoked
 @bot.command()
 async def log(ctx, channel_id: int = None):
-    """Starts logging interactions with the bot and sets the log channel."""
     if channel_id:
         # Save the new logging channel
         save_logging_state(True, channel_id)
         await ctx.send(f"Logging started. All interactions with the bot will now be logged in <#{channel_id}>.")
+        await asyncio.sleep(3)
+        await ctx.message.delete()
     else:
         # Use previously saved channel if no channel ID is provided
         logging_active, current_channel_id = load_logging_state()
         if logging_active:
             await ctx.send(f"Logging is already active and logging to <#{current_channel_id}>.")
+            await asyncio.sleep(3)
+            await ctx.message.delete()
         else:
             await ctx.send("Logging is not active. Please provide a channel ID to start logging.")
+            await asyncio.sleep(3)
+            await ctx.message.delete()
 
 # Stop logging when ..stlog is invoked
 @bot.command()
 async def stlog(ctx):
-    """Stops logging interactions with the bot."""
     logging_active, _ = load_logging_state()
     if logging_active:
         save_logging_state(False, None)
         await ctx.send("Logging stopped. No further interactions with the bot will be logged.")
+        await asyncio.sleep(3)
+        await ctx.message.delete()
     else:
         await ctx.send("Logging is already stopped.")
+        await asyncio.sleep(3)
+        await ctx.message.delete()
 
 # Log interactions with the bot (commands)
 @bot.event
 async def on_message(message):
-    """Log when a user sends a message that invokes a bot command."""
     if message.author == bot.user:
         return  # Don't log messages sent by the bot itself
 
@@ -831,7 +838,6 @@ async def on_message(message):
 # Log bot's message deletions
 @bot.event
 async def on_message_delete(message):
-    """Log when the bot's message is deleted."""
     logging_active, channel_id = load_logging_state()
     if message.author == bot.user and logging_active and channel_id:
         channel = bot.get_channel(channel_id)
@@ -845,7 +851,6 @@ async def on_message_delete(message):
 # Log bot's message edits
 @bot.event
 async def on_message_edit(before, after):
-    """Log when the bot's message is edited."""
     logging_active, channel_id = load_logging_state()
     if before.author == bot.user and logging_active and channel_id:
         channel = bot.get_channel(channel_id)
@@ -860,7 +865,6 @@ async def on_message_edit(before, after):
 # Log when a reaction is added to the bot's message
 @bot.event
 async def on_reaction_add(reaction, user):
-    """Log when a user reacts to the bot's message."""
     logging_active, channel_id = load_logging_state()
     if reaction.message.author == bot.user and logging_active and channel_id:
         channel = bot.get_channel(channel_id)
