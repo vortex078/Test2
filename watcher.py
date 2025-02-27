@@ -323,8 +323,11 @@ async def unban(ctx, user_id: int = None):
         return
     
     guild = ctx.guild
-    bans = await guild.bans()
-    banned_user = discord.utils.get(bans, user__id=user_id)
+    banned_user = None
+    async for entry in guild.bans():
+        if entry.user.id == user_id:
+            banned_user = entry.user
+            break
 
     if not banned_user:
         await ctx.send("⚠ This user is not banned.")
@@ -333,7 +336,7 @@ async def unban(ctx, user_id: int = None):
         return
 
     try:
-        await guild.unban(banned_user.user)
+        await guild.unban(banned_user)
         await ctx.message.add_reaction("✅")
     except discord.Forbidden:
         await ctx.message.add_reaction("❌")
@@ -342,6 +345,7 @@ async def unban(ctx, user_id: int = None):
     
     await asyncio.sleep(3)
     await ctx.message.delete()
+
 
 @bot.command()
 @is_admin()
