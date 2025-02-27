@@ -499,7 +499,7 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
         await ctx.send(embed=embed)
         return
 
-    elif action.lower() == "assign" and role_name and member:
+    if action.lower() == "assign" and role_name and member:
         # Assign a role to a member
         role = discord.utils.get(ctx.guild.roles, name=role_name)
         if role:
@@ -512,9 +512,23 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
                 await ctx.send(f"⚠️ Error assigning role: {e}")
         else:
             await ctx.send(f"❌ Role `{role_name}` not found.")
+    
+    elif action.lower() == "rem" and role_name and member:
+        # Remove a role from a member
+        role = discord.utils.get(ctx.guild.roles, name=role_name)
+        if role:
+            try:
+                await member.remove_roles(role)
+                await ctx.send(f"✅ Removed the role `{role.name}` from {member.mention}.")
+            except discord.Forbidden:
+                await ctx.send("❌ I do not have permission to remove roles.")
+            except discord.HTTPException as e:
+                await ctx.send(f"⚠️ Error removing role: {e}")
+        else:
+            await ctx.send(f"❌ Role `{role_name}` not found.")
+
     else:
-        await ctx.send("❌ Invalid usage. Use `..r` to list roles or `..r assign <role_name> @member` to assign a role.")
-        
+        await ctx.send("❌ Invalid usage. Use `..r` to list roles, `..r assign <role_name> @member` to assign a role, or `..r rem <role_name> @member` to remove a role.")
 
 @bot.command()
 @is_admin()
