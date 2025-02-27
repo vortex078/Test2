@@ -5,6 +5,7 @@ from datetime import timedelta
 import random
 import time
 import re
+import json
 
 intents = discord.Intents.default()
 intents.members = True
@@ -17,84 +18,113 @@ watched_users = set()
 online_users = set()
 
 rules_storage = {}
+
 OWNER_ID = 707584409531842623
-# Hardcoded admins (cannot be removed)
-HARD_CODED_ADMINS = {OWNER_ID, 1041268209011138660, 620200699300413442, 1324836606812623011}  # Replace with actual IDs
 
-# Set containing both hardcoded and dynamically added admins
-admins = set(HARD_CODED_ADMINS)
+# JSON file for saving hardcoded admins
+ADMIN_FILE = "admins.json"
 
-@bot.event
-async def on_ready():
-    print(f"✅ Logged in as {bot.user}")
+def load_hardcoded_admins():
+    """Load hardcoded admins from the JSON file."""
+    try:
+        with open(ADMIN_FILE, "r") as f:
+            return set(json.load(f))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return set()
+
+def save_hardcoded_admins(admin_list):
+    """Save hardcoded admins to the JSON file."""
+    with open(ADMIN_FILE, "w") as f:
+        json.dump(list(admin_list), f, indent=4)
+
+# Load hardcoded admins from JSON
+HARD_CODED_ADMINS = load_hardcoded_admins()
+HARD_CODED_ADMINS.add(OWNER_ID)  # Ensure the owner is always an admin
+
+# Set for temporary admins (not saved)
+temporary_admins = set()
 
 def is_admin():
     async def predicate(ctx):
-        if ctx.author.id in admins:
-            return True
-        await ctx.send("⛔ You **do not** have permission to use this command!")
-        return False
+        return ctx.author.id in HARD_CODED_ADMINS or ctx.author.id in temporary_admins
     return commands.check(predicate)
 
-def get_all_admins():
-    return HARD_CODED_ADMINS | admins
-
 @bot.command(name="aa")
-async def add_admin(ctx, member: discord.Member):
+async def add_temp_admin(ctx, member: discord.Member):
+    if ctx.author.id != OWNER_ID:
+        await ctx.message.add_reaction("❌")
+        return
+
+    if member.id in HARD_CODED_ADMINS or member.id in temporary_admins:
+        await ctx.send("⚠ This user is already an admin!")
+        return
+
+    temporary_admins.add(member.id)
+    await ctx.message.add_reaction("✅")
+
+@bot.command(name="ra")
+async def remove_temp_admin(ctx, member: discord.Member):
+    if ctx.author.id != OWNER_ID:
+        await ctx.message.add_reaction("❌")
+        return
+
+    if member.id in temporary_admins:
+        temporary_admins.remove(member.id)
+        await ctx.message.add_reaction("✅")
+    else:
+        await ctx.send("⚠ This user is **not a temporary admin**!")
+
+@bot.command(name="ha")
+async def add_hardcoded_admin(ctx, member: discord.Member):
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
         await asyncio.sleep(1)
         await ctx.message.delete()
         return
 
-    admins.add(member.id)  # Add to admin list
+    if member.id in HARD_CODED_ADMINS:
+        await ctx.send("⚠ This user is **already a hardcoded admin**!")
+        return
+
+    HARD_CODED_ADMINS.add(member.id)  # Add to the set
+    save_hardcoded_admins()  # Save to JSON
     await ctx.message.add_reaction("✅")
     await asyncio.sleep(1)
     await ctx.message.delete()
 
-@bot.command(name="ra")
-async def remove_admin(ctx, member: discord.Member):
+@bot.command(name="hr")
+async def remove_hardcoded_admin(ctx, member: discord.Member):
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
         return
 
-    if member.id in admins:
-        admins.remove(member.id)
-        await ctx.message.add_reaction("✅")
-        await asyncio.sleep(1)
-        await ctx.message.delete()
-    else:
-        await ctx.send("⚠ This user is **not an admin**!")
-        await asyncio.sleep(2)
-        await ctx.message.delete()
+    if member.id not in HARD_CODED_ADMINS:
+        await ctx.send("⚠ This user is **not a hardcoded admin**!")
+        return
+
+    HARD_CODED_ADMINS.remove(member.id)  # Remove from the set
+    save_hardcoded_admins()  # Save to JSON
+    await ctx.message.add_reaction("✅")
+    await asyncio.sleep(1)
+    await ctx.message.delete()
 
 @bot.command(name="la")
 async def list_admins(ctx):
-    if not admins:
+    if not HARD_CODED_ADMINS and not temporary_admins:
         await ctx.send("⚠ No admins found!")
-        await asyncio.sleep(1)
-        await ctx.message.delete()
         return
 
-    hardcoded_admins = []
-    added_admins = []
-
-    for admin_id in admins:
-        member = ctx.guild.get_member(admin_id)
-        admin_name = member.name if member else f"Unknown User ({admin_id})"
-
-        if admin_id in HARD_CODED_ADMINS:
-            hardcoded_admins.append(admin_name)
-        else:
-            added_admins.append(admin_name)
-
-    hardcoded_text = "\n".join(hardcoded_admins) if hardcoded_admins else "None"
-    added_text = "\n".join(added_admins) if added_admins else "None"
+    hardcoded_text = "\n".join(f"<@{admin}>" for admin in HARD_CODED_ADMINS) if HARD_CODED_ADMINS else "None"
+    temp_text = "\n".join(f"<@{admin}>" for admin in temporary_admins) if temporary_admins else "None"
 
     embed = discord.Embed(title="👑 Admin List", color=discord.Color.gold())
-    embed.description = f"🔸 **Hardcoded Admins**\n{hardcoded_text}\n\n🔹 **Added Admins**\n{added_text}"
+    embed.description = f"🔸 **Hardcoded Admins**\n{hardcoded_text}\n\n🔹 **Temporary Admins**\n{temp_text}"
 
     await ctx.send(embed=embed)
+
+@bot.event
+async def on_ready():
+    print(f"✅ Logged in as {bot.user}")
 
 afk_users = {}
 
@@ -382,7 +412,7 @@ async def help_command(ctx):
     description += "\n`..ping`: Latency check"
 
     # Admin commands (for admins)
-    if ctx.author.id in admins:
+    if ctx.author.id in is_admin:
         description += "\n`..kick @user <reason>`: Kicks user with reason."
         description += "\n`..ban @user <reason>`: Bans user with reason."
         description += "\n`..unban @user`: Un-bans user."
