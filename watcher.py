@@ -114,8 +114,19 @@ async def list_admins(ctx):
         await ctx.send("⚠ No admins found!")
         return
 
-    hardcoded_text = "\n".join(f"<@{admin}>" for admin in HARD_CODED_ADMINS) if HARD_CODED_ADMINS else "None"
-    temp_text = "\n".join(f"<@{admin}>" for admin in temporary_admins) if temporary_admins else "None"
+    hardcoded_admins = []
+    temp_admins = []
+
+    for admin_id in HARD_CODED_ADMINS:
+        member = ctx.guild.get_member(admin_id)
+        hardcoded_admins.append(member.name if member else f"Unknown ({admin_id})")
+
+    for admin_id in temporary_admins:
+        member = ctx.guild.get_member(admin_id)
+        temp_admins.append(member.name if member else f"Unknown ({admin_id})")
+
+    hardcoded_text = "\n".join(hardcoded_admins) if hardcoded_admins else "None"
+    temp_text = "\n".join(temp_admins) if temp_admins else "None"
 
     embed = discord.Embed(title="👑 Admin List", color=discord.Color.gold())
     embed.description = f"🔸 **Hardcoded Admins**\n{hardcoded_text}\n\n🔹 **Temporary Admins**\n{temp_text}"
