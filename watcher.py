@@ -786,28 +786,22 @@ async def stlog(ctx):
         await ctx.message.delete()
 
 @bot.event
-async def on_message(message):
-    if message.author == bot.user:
+async def on_message_delete(message):
+    if message.author.bot or not message.content:
         return
 
-    guild_id = message.guild.id
-    logging_active, channel_id = load_logging_state(guild_id)
+    sniped_messages[message.channel.id] = (message.author, message.content)
 
-    if logging_active and channel_id:
-        command = message.content
-        if command.startswith(".."):
-            channel = bot.get_channel(channel_id)
-
-            if channel:
-                embed = discord.Embed(title="Bot Command Interaction Logged", color=discord.Color.green())
-                embed.add_field(name="User", value=message.author.name)
-                embed.add_field(name="Command", value=command)
-                embed.add_field(name="Channel", value=message.channel.mention)
-                embed.add_field(name="Time", value=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-
-                await channel.send(embed=embed)
-
-    await bot.process_commands(message)
+    logging_active, channel_id, logging_guild = load_logging_state()
+    if logging_active and channel_id and logging_guild == message.guild.id:
+        log_channel = bot.get_channel(channel_id)
+        if log_channel:
+            embed = discord.Embed(title="Message Deleted", color=discord.Color.red())
+            embed.add_field(name="User", value=message.author.name)
+            embed.add_field(name="Content", value=message.content or "[No Text]")
+            embed.add_field(name="Channel", value=message.channel.mention)
+            embed.set_footer(text=f"Deleted at {message.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+            await log_channel.send(embed=embed)
 
 @bot.event
 async def on_message_delete(message):
