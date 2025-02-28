@@ -28,58 +28,46 @@ OWNER_ID = 707584409531842623
 
 ADMIN_FILE = "admins.json"
 
-# UNO Game Setup
-class Card:
-    def __init__(self, color, rank):
-        self.color = color
-        self.rank = rank
-
-    def __str__(self):
-        return f"{self.rank} of {self.color}"
-
-class Player:
-    def __init__(self, user):
-        self.user = user
-        self.hand = []
-
-class Game:
+# Initialize the game structure
+class UNOGame:
     def __init__(self):
         self.players = []
-        self.deck = []
-        self.discard_pile = deque()
-        self.turn_order = deque()
+        self.deck = self.create_deck()
+        self.player_hands = {}
+        self.turn_order = []
         self.current_player = None
+        self.current_card = None
         self.direction = 1  # 1 for clockwise, -1 for counter-clockwise
         self.game_over = False
 
-    def start_game(self, players):
-        self.players = players
-        self.deck = self.create_deck()
-        random.shuffle(self.deck)
-
-        for player in self.players:
-            player.hand = [self.deck.pop() for _ in range(7)]
-        
-        self.turn_order = deque(self.players)
-        self.current_player = self.turn_order[0]
-
     def create_deck(self):
-        colors = ['Red', 'Green', 'Blue', 'Yellow', 'Wild']
-        ranks = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Skip', 'Reverse', 'Draw2', 'Wild', 'WildDraw4']
+        # A simple deck with 2 colors (Red, Blue), numbered 0-9
+        colors = ["Red", "Blue"]
         deck = []
-        for color in colors[:-1]:  # For Red, Green, Blue, Yellow
-            for rank in ranks[:-2]:  # Excluding Wild and WildDraw4
-                deck.append(Card(color, rank))
-                if rank != '0':  # Add second copy of non-'0' cards
-                    deck.append(Card(color, rank))
-        deck.extend([Card('Wild', 'Wild'), Card('Wild', 'WildDraw4')] * 4)  # Wild cards
+        for color in colors:
+            for i in range(10):
+                deck.append(f"{i} of {color}")
+        random.shuffle(deck)
         return deck
 
-    def get_top_card(self):
-        return self.discard_pile[-1] if self.discard_pile else None
+    def start_game(self, players):
+        self.players = players
+        self.turn_order = players[:]
+        self.current_player = self.players[0]
+        self.player_hands = {player: [self.deck.pop() for _ in range(7)] for player in players}
+        self.current_card = self.deck.pop()
 
-# Global game state
-active_games = {}
+    def advance_turn(self):
+        current_idx = self.turn_order.index(self.current_player)
+        next_idx = (current_idx + self.direction) % len(self.players)
+        self.current_player = self.turn_order[next_idx]
+
+    def get_player_hand(self, player):
+        return self.player_hands.get(player, [])
+
+# Game instance
+game = UNOGame()
+
 
 def load_hardcoded_admins():
     try:
@@ -211,109 +199,184 @@ async def list_admins(ctx):
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
 
-# Start a game (for testing purposes)
+# Command: Start the game
 @bot.command(name="start_game")
-async def start_game(ctx):
-    game = Game()
-    players = [Player(ctx.author)]  # Just add the command author as a player for simplicity
-    game.start_game(players)
-    active_games[ctx.guild.id] = game
-    await ctx.send(f"Game started! It's {ctx.author.name}'s turn.")
+async def start_game(ctx, *players: discord.Member):
+    if len(players) < 2:
+        await ctx.send("You need at least 2 players to start the game!")
+        return
 
-# Show hand command with buttons
+    game.start_game(players)
+    await ctx.send(f"Game started! It's {game.current_player.mention}'s turn.")
+
+    # Show the first card
+    await ctx.send(f"First card: {game.current_card}")
+
+    # Buttons for player interaction
+    hand_button = Button(label="Show Hand", style=discord.ButtonStyle.green)
+    draw_button = Button(label="Draw Card", style=discord.ButtonStyle.blue)
+    play_button = Button(label="Play Card", style=discord.ButtonStyle.red)
+
+    view = View()
+    view.add_item(hand_button)
+    view.add_item(draw_button)
+    view.add_item(play_button)
+
+    # Button for showing the current player's hand
+    async def hand_button_callback(interaction):
+        if interaction.user != game.current_player:
+            await interaction.response.send_message("It's not your turn!", ephemeral=True)
+            return
+
+        hand = game.get_player_hand(game.current_player)
+        await interaction.response.send_message(f"{game.current_player.mention}'s hand: {', '.join(hand)}")
+
+    # Button for drawing a card
+    async def draw_card_callback(interaction):
+        if interaction.user != game.current_player:
+            await interaction.response.send_message("It's not your turn!", ephemeral=True)
+            return
+
+        if game.game_over:
+            await interaction.response.send_message("The game is over!", ephemeral=True)
+            return
+
+        if not game.deck:
+            await interaction.response.send_message("The deck is empty!", ephemeral=True)
+            return
+
+        card = game.deck.pop()
+        game.player_hands[game.current_player].append(card)
+        await interaction.response.send_message(f"{game.current_player.mention} drew a card: {card}")
+
+        # Advance the turn
+        game.advance_turn()
+        await ctx.send(f"It's now {game.current_player.mention}'s turn.")
+
+    # Button for playing a card
+    async def play_card_callback(interaction):
+        if interaction.user != game.current_player:
+            await interaction.response.send_message("It's not your turn!", ephemeral=True)
+            return
+
+        hand = game.get_player_hand(game.current_player)
+        if not hand:
+            await interaction.response.send_message("You have no cards to play!", ephemeral=True)
+            return
+
+        card_to_play = hand[0]  # Just picking the first card for simplicity
+        game.player_hands[game.current_player].remove(card_to_play)
+        game.current_card = card_to_play
+        await interaction.response.send_message(f"{game.current_player.mention} played {card_to_play}.")
+
+        # Advance the turn
+        game.advance_turn()
+        await ctx.send(f"It's now {game.current_player.mention}'s turn.")
+
+    # Assign the callbacks
+    hand_button.callback = hand_button_callback
+    draw_button.callback = draw_card_callback
+    play_button.callback = play_card_callback
+
+    # Show the interactive buttons
+    await ctx.send("Click below to show your hand, draw a card, or play a card!", view=view)
+
+# Command to show player's hand
 @bot.command(name="hand")
 async def show_hand(ctx):
-    game = active_games.get(ctx.guild.id)
-    if not game:
-        await ctx.send("No game is running!")
+    if ctx.author != game.current_player:
+        await ctx.send("It's not your turn!")
         return
 
-    player = next((p for p in game.players if p.user == ctx.author), None)
-    if player is None:
-        await ctx.send("You are not in the game!")
+    hand = game.get_player_hand(ctx.author)
+    await ctx.send(f"{ctx.author.mention}'s hand: {', '.join(hand)}")
+
+# Command to play a card
+@bot.command(name="play")
+async def play_card(ctx, card_name: str):
+    if ctx.author != game.current_player:
+        await ctx.send("It's not your turn!")
         return
 
-    if not player.hand:
-        await ctx.send(f"{ctx.author.mention}, you have no cards left!")
+    hand = game.get_player_hand(ctx.author)
+    if card_name not in hand:
+        await ctx.send(f"{ctx.author.mention}, you do not have that card in your hand.")
         return
 
-    hand_cards = [f"{i+1}. {str(card)}" for i, card in enumerate(player.hand)]
+    game.player_hands[ctx.author].remove(card_name)
+    game.current_card = card_name
+    await ctx.send(f"{ctx.author.mention} played {card_name}. It's now {game.current_player.mention}'s turn.")
+    game.advance_turn()
 
-    embed = discord.Embed(title=f"{ctx.author.name}'s Hand", description="\n".join(hand_cards), color=discord.Color.blue())
-
-    buttons = [
-        Button(label=str(i+1), custom_id=f"card_{i}", style=discord.ButtonStyle.primary) 
-        for i in range(len(player.hand))
-    ]
-    
-    view = View()
-    for button in buttons:
-        view.add_item(button)
-
-    await ctx.send(embed=embed, view=view)
-
-# Play card command with button interaction
-@bot.event
-async def on_button_click(interaction):
-    game = active_games.get(interaction.guild.id)
-    if not game:
-        await interaction.response.send_message("No game is running!", ephemeral=True)
+# Command to draw a card
+@bot.command(name="draw")
+async def draw_card(ctx):
+    if ctx.author != game.current_player:
+        await ctx.send("It's not your turn!")
         return
 
-    player = next((p for p in game.players if p.user == interaction.user), None)
-    if player is None:
-        await interaction.response.send_message("You are not in the game!", ephemeral=True)
+    if not game.deck:
+        await ctx.send("The deck is empty!")
         return
 
-    card_index = int(interaction.custom_id.split("_")[1])
-    card = player.hand[card_index]
+    card = game.deck.pop()
+    game.player_hands[ctx.author].append(card)
+    await ctx.send(f"{ctx.author.mention} drew a card: {card}")
+    game.advance_turn()
 
-    top_card = game.get_top_card()
-    if not top_card or card.color == top_card.color or card.rank == top_card.rank or card.color == 'Wild':
-        player.hand.pop(card_index)
-        game.discard_pile.append(card)
+# Command to skip a player's turn
+@bot.command(name="skip")
+async def skip(ctx):
+    if ctx.author != game.current_player:
+        await ctx.send("It's not your turn!")
+        return
 
-        embed = discord.Embed(
-            title=f"{interaction.user.name} played a card!",
-            description=f"Played: {str(card)}",
-            color=discord.Color.green()
-        )
+    game.advance_turn()
+    await ctx.send(f"{ctx.author.mention} skipped their turn. It's now {game.current_player.mention}'s turn.")
 
-        # Check if the game is over (example check for 0 cards)
-        if not player.hand:
-            game.game_over = True
-            embed.add_field(name="Game Over", value=f"{interaction.user.name} wins the game!")
+# Command to end the game
+@bot.command(name="end_game")
+async def end_game(ctx):
+    game.game_over = True
+    await ctx.send("The game has ended!")
 
-        # Rotate turn
-        game.turn_order.rotate(game.direction)
-        game.current_player = game.turn_order[0]
 
-        await interaction.response.edit_message(embed=embed, view=None)
-        await interaction.channel.send(f"It's now {game.current_player.user.name}'s turn.")
-
-    else:
-        await interaction.response.send_message("You cannot play this card!", ephemeral=True)
-
-# Display the rules
 @bot.command(name="rules")
-async def show_rules(ctx):
-    rules = """
+async def rules(ctx):
+    rules_text = """
     **UNO Game Rules:**
-    1. **Objective:** The goal of UNO is to be the first player to score 500 points.
-    2. **Gameplay:**
-        - Players take turns in clockwise or counter-clockwise order.
-        - On each turn, a player must match a card from their hand to the top card of the discard pile.
-        - If a player can't match the card, they must draw a card from the deck.
-    3. **Card Types:**
-        - **Number cards (0-9):** Regular cards.
-        - **Skip:** Skips the next player's turn.
-        - **Reverse:** Reverses the direction of play.
-        - **Draw 2:** Forces the next player to draw 2 cards and skip their turn.
-        - **Wild:** The player can change the color being played.
-        - **Wild Draw 4:** The player can change the color and force the next player to draw 4 cards.
-    4. **Winning:** The first player to run out of cards wins the game.
+    
+    1. **Objective**: The first player to discard all their cards wins.
+    
+    2. **Setup**: Each player starts with 7 cards. A card is drawn from the deck and placed face-up in the center. The first player plays a card that matches the color or number of the top card in the discard pile. If they cannot play, they must draw a card.
+    
+    3. **Card Types**:
+        - **Number Cards**: Cards numbered 0-9.
+        - **Action Cards**: Special cards with unique effects.
+            - **Skip**: The next player is skipped.
+            - **Reverse**: Reverses the direction of play.
+            - **Draw Two**: The next player draws 2 cards and loses their turn.
+            - **Wild**: The player can change the color of play to any color.
+            - **Wild Draw Four**: The next player draws 4 cards and loses their turn. The color of play is changed.
+    
+    4. **Playing a Card**: To play a card, it must either match the color or the number of the top card in the discard pile. Wild cards can be played at any time.
+    
+    5. **Drawing Cards**: If you cannot play any card from your hand, you must draw a card from the deck. If the drawn card can be played, you may play it immediately.
+    
+    6. **UNO**: When you have only one card left, you must say "UNO". If you don't say "UNO" and another player catches you before your next turn, you must draw 2 cards as a penalty.
+    
+    7. **Winning**: The first player to discard all their cards wins the game. The game ends when there are no cards left in the deck.
+
+    **Good luck and have fun!**
     """
-    await ctx.send(rules)
+    
+    embed = discord.Embed(
+        title="UNO Game Rules",
+        description=rules_text,
+        color=discord.Color.blue()
+    )
+    
+    await ctx.send(embed=embed)
 
 
 AFK_FILE = "afk_data.json"
