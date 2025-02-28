@@ -292,11 +292,11 @@ async def start_game(ctx, *players: discord.Member):
         async def card_button_callback(interaction, card):
             game.player_hands[game.current_player].remove(card)
             game.current_card = card
-            await interaction.response.send_message(f"{game.current_player.mention} played {card}.", ephemeral=False)
+            await interaction.response.send_message(f"{game.current_player.mention} played {card}.", ephemeral=False)  # Make this public
 
             # Advance the turn
             game.advance_turn()
-            await ctx.send(f"It's now {game.current_player.mention}'s turn.")
+            await interaction.response.send_message(f"It's now {game.current_player.mention}'s turn.", ephemeral=False)  # Make this public
 
         # Add the callbacks for each card button
         for card, button in zip(hand, card_buttons):
