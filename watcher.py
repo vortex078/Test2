@@ -604,6 +604,10 @@ async def help_command(ctx):
     description += "\n`..cf `: Either heads or tails."
     description += "\n`..la`: Lists all current admins."
 
+    description += "\n\n`..start`: Starts a new UNO game in the server."
+    description += "\n`..join`: Join an ongoing UNO game in the server."
+    description += "\n`..play <card_name>`: Play a card from your hand (e.g., `..play 3 of Red` or `..play Wild`)."
+
     if ctx.author.id == OWNER_ID:
         description += "\n\n`..aa @user`: Adds a new admin."
         description += "\n`..ra @user`: Removes an admin."
