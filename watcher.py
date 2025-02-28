@@ -201,41 +201,6 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-@bot.event
-async def on_message(message):
-    if message.author.id in afk_users:
-
-        afk_time = afk_users[message.author.id]["time"]
-        time_ago = time.time() - afk_time
-        minutes = int(time_ago // 60)
-        seconds = int(time_ago % 60)
-        
-        del afk_users[message.author.id]
-        
-        embed = discord.Embed(
-            description=f"✅ {message.author.mention}, you're no longer AFK.",
-            color=discord.Color.from_rgb(0, 0, 0)
-        )
-        await message.channel.send(embed=embed)
-
-    for mention in message.mentions:
-        if mention.id in afk_users:
-            reason = afk_users[mention.id]["reason"]
-
-            afk_time = afk_users[mention.id]["time"]
-            time_ago = time.time() - afk_time
-            minutes = int(time_ago // 60)
-            seconds = int(time_ago % 60)
-            time_display = f"{minutes} minutes and {seconds} seconds ago"
-
-            embed = discord.Embed(
-                description=f":warning: {mention.mention} is AFK: **{reason}** - ({time_display})",
-                color=discord.Color.from_rgb(0, 0, 0)
-            )
-            await message.channel.send(embed=embed)
-
-    await bot.process_commands(message)
-
 
 @bot.command(name="i")
 @is_admin()
