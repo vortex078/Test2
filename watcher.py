@@ -155,16 +155,30 @@ async def list_admins(ctx):
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
 
-afk_users = {}
+AFK_FILE = "afk_data.json"
+
+def load_afk_data():
+    try:
+        with open(AFK_FILE, "r") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+def save_afk_data(data):
+    with open(AFK_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+afk_users = load_afk_data()
 
 @bot.command()
 async def afk(ctx, *, reason: str = "AFK"):
     """Marks the user as AFK with an optional reason."""
-    afk_users[ctx.author.id] = {"reason": reason, "time": time.time()}
+    afk_users[str(ctx.author.id)] = {"reason": reason, "time": time.time()}
+    save_afk_data(afk_users)  # Save to file
 
     embed = discord.Embed(
         description=f"✅ {ctx.author.mention}: You're now AFK with the status: **{reason}**",
-        color=discord.Color.from_rgb(0, 0, 0)
+        color=discord.Color.dark_gray()
     )
     await ctx.send(embed=embed)
 
@@ -173,10 +187,15 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    if message.author.id in afk_users:
-        afk_time = afk_users.pop(message.author.id)["time"]
-        time_afk = int(time.time() - afk_time)
-        minutes, seconds = divmod(time_afk, 60)
+    user_id = str(message.author.id)
+
+    # Remove AFK if the user sends a message
+    if user_id in afk_users:
+        afk_info = afk_users.pop(user_id)  # Remove from AFK
+        save_afk_data(afk_users)  # Save changes
+
+        afk_time = int(time.time() - afk_info["time"])
+        minutes, seconds = divmod(afk_time, 60)
 
         embed = discord.Embed(
             description=f"✅ {message.author.mention}, welcome back! You were AFK for **{minutes}m {seconds}s**.",
@@ -184,23 +203,22 @@ async def on_message(message):
         )
         await message.channel.send(embed=embed)
 
+    # Notify if someone mentions an AFK user
     for mention in message.mentions:
-        if mention.id in afk_users:
-            afk_info = afk_users[mention.id]
+        mentioned_id = str(mention.id)
+        if mentioned_id in afk_users:
+            afk_info = afk_users[mentioned_id]
             afk_reason = afk_info["reason"]
             afk_time = int(time.time() - afk_info["time"])
-
             minutes, seconds = divmod(afk_time, 60)
-            time_str = f"{minutes}m {seconds}s"
 
             embed = discord.Embed(
-                description=f"⚠️ {mention.mention} is AFK: **{afk_reason}**\n⏳ AFK for: **{time_str}**",
+                description=f"⚠️ {mention.mention} is AFK: **{afk_reason}**\n⏳ AFK for: **{minutes}m {seconds}s**",
                 color=discord.Color.orange()
             )
             await message.channel.send(embed=embed)
 
     await bot.process_commands(message)
-
 
 @bot.command(name="i")
 @is_admin()
