@@ -213,9 +213,9 @@ async def start_game(ctx, *players: discord.Member):
     await ctx.send(f"First card: {game.current_card}")
 
     # Buttons for player interaction
-    hand_button = Button(label="Show Hand", style=discord.ButtonStyle.green)
-    draw_button = Button(label="Draw Card", style=discord.ButtonStyle.blue)
-    play_button = Button(label="Play Card", style=discord.ButtonStyle.red)
+    hand_button = Button(label="Show Hand", style=discord.ButtonStyle.success)
+    draw_button = Button(label="Draw Card", style=discord.ButtonStyle.primary)
+    play_button = Button(label="Play Card", style=discord.ButtonStyle.danger)
 
     view = View()
     view.add_item(hand_button)
@@ -229,7 +229,29 @@ async def start_game(ctx, *players: discord.Member):
             return
 
         hand = game.get_player_hand(game.current_player)
-        await interaction.response.send_message(f"{game.current_player.mention}'s hand: {', '.join(hand)}")
+        
+        # Create buttons for each card in hand
+        card_buttons = [Button(label=card, style=discord.ButtonStyle.primary) for card in hand]
+
+        async def card_button_callback(interaction, card):
+            game.player_hands[game.current_player].remove(card)
+            game.current_card = card
+            await interaction.response.send_message(f"{game.current_player.mention} played {card}.", ephemeral=True)
+
+            # Advance the turn
+            game.advance_turn()
+            await ctx.send(f"It's now {game.current_player.mention}'s turn.")
+
+        # Add the callbacks for each card button
+        for card, button in zip(hand, card_buttons):
+            button.callback = lambda interaction, card=card: card_button_callback(interaction, card)
+
+        # Show the interactive buttons for the player to choose a card
+        card_view = View()
+        for button in card_buttons:
+            card_view.add_item(button)
+
+        await interaction.response.send_message(f"{game.current_player.mention}'s hand:", view=card_view, ephemeral=True)
 
     # Button for drawing a card
     async def draw_card_callback(interaction):
@@ -264,14 +286,28 @@ async def start_game(ctx, *players: discord.Member):
             await interaction.response.send_message("You have no cards to play!", ephemeral=True)
             return
 
-        card_to_play = hand[0]  # Just picking the first card for simplicity
-        game.player_hands[game.current_player].remove(card_to_play)
-        game.current_card = card_to_play
-        await interaction.response.send_message(f"{game.current_player.mention} played {card_to_play}.")
+        # Create buttons for each card in hand
+        card_buttons = [Button(label=card, style=discord.ButtonStyle.primary) for card in hand]
 
-        # Advance the turn
-        game.advance_turn()
-        await ctx.send(f"It's now {game.current_player.mention}'s turn.")
+        async def card_button_callback(interaction, card):
+            game.player_hands[game.current_player].remove(card)
+            game.current_card = card
+            await interaction.response.send_message(f"{game.current_player.mention} played {card}.", ephemeral=True)
+
+            # Advance the turn
+            game.advance_turn()
+            await ctx.send(f"It's now {game.current_player.mention}'s turn.")
+
+        # Add the callbacks for each card button
+        for card, button in zip(hand, card_buttons):
+            button.callback = lambda interaction, card=card: card_button_callback(interaction, card)
+
+        # Show the interactive buttons for the player to choose a card
+        card_view = View()
+        for button in card_buttons:
+            card_view.add_item(button)
+
+        await interaction.response.send_message(f"Choose a card to play:", view=card_view)
 
     # Assign the callbacks
     hand_button.callback = hand_button_callback
@@ -281,7 +317,7 @@ async def start_game(ctx, *players: discord.Member):
     # Show the interactive buttons
     await ctx.send("Click below to show your hand, draw a card, or play a card!", view=view)
 
-# Command to show player's hand
+# Command to show player's hand (with ephemeral messages)
 @bot.command(name="hand")
 async def show_hand(ctx):
     if ctx.author != game.current_player:
@@ -289,9 +325,31 @@ async def show_hand(ctx):
         return
 
     hand = game.get_player_hand(ctx.author)
-    await ctx.send(f"{ctx.author.mention}'s hand: {', '.join(hand)}")
 
-# Command to play a card
+    # Create buttons for each card in hand
+    card_buttons = [Button(label=card, style=discord.ButtonStyle.primary) for card in hand]
+
+    async def card_button_callback(interaction, card):
+        game.player_hands[ctx.author].remove(card)
+        game.current_card = card
+        await interaction.response.send_message(f"{ctx.author.mention} played {card}.", ephemeral=True)
+
+        # Advance the turn
+        game.advance_turn()
+        await ctx.send(f"It's now {game.current_player.mention}'s turn.")
+
+    # Add the callbacks for each card button
+    for card, button in zip(hand, card_buttons):
+        button.callback = lambda interaction, card=card: card_button_callback(interaction, card)
+
+    # Show the interactive buttons for the player to choose a card
+    card_view = View()
+    for button in card_buttons:
+        card_view.add_item(button)
+
+    await ctx.send(f"{ctx.author.mention}'s hand:", view=card_view, ephemeral=True)
+
+# Command to play a card (when not using buttons)
 @bot.command(name="play")
 async def play_card(ctx, card_name: str):
     if ctx.author != game.current_player:
@@ -338,7 +396,6 @@ async def skip(ctx):
 @bot.command(name="end_game")
 async def end_game(ctx):
     game.game_over = True
-    await ctx.send("The game has ended!")
 
 
 @bot.command(name="rules")
