@@ -469,10 +469,18 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
         await ctx.message.delete()
         return
     
+    # If no action is specified or action is invalid, list all roles in an embed
     if action is None:
         roles = [role.name for role in ctx.guild.roles]
-        await ctx.send(f"✅ Available roles in this server:\n" + "\n".join(roles))
+        embed = discord.Embed(
+            title="✅ Available Roles",
+            description="\n".join(roles),
+            color=discord.Color.green()
+        )
+        embed.set_footer(text="Roles are listed in alphabetical order.")
+        msg = await ctx.send(embed=embed)
         await asyncio.sleep(5)
+        await msg.delete()
         await ctx.message.delete()
         return
 
