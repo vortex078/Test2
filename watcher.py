@@ -27,6 +27,105 @@ OWNER_ID = 707584409531842623
 
 ADMIN_FILE = "admins.json"
 
+active_games = {}
+
+class Card:
+    def __init__(self, rank, color):
+        self.rank = rank
+        self.color = color
+    
+    def __str__(self):
+        return f"{self.rank} of {self.color}"
+
+class Deck:
+    def __init__(self):
+        colors = ['Red', 'Blue', 'Green', 'Yellow']
+        ranks = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Skip', 'Reverse', 'Draw2']
+        self.cards = [Card(rank, color) for color in colors for rank in ranks] * 2  # Two sets of each card
+        self.cards += [Card('Wild', 'Wild'), Card('WildDraw4', 'Wild')] * 4  # Add wild cards
+        random.shuffle(self.cards)
+
+    def draw(self):
+        return self.cards.pop() if self.cards else None
+
+class Player:
+    def __init__(self, user):
+        self.user = user
+        self.hand = []
+
+    def draw_card(self, deck):
+        card = deck.draw()
+        if card:
+            self.hand.append(card)
+        return card
+
+    def play_card(self, card):
+        self.hand.remove(card)
+        return card
+
+class Game:
+    def __init__(self, host):
+        self.players = [Player(host)]
+        self.deck = Deck()
+        self.discard_pile = deque([self.deck.draw()])  # Start with one card in the discard pile
+        self.turn_order = deque([host])
+        self.current_player = host
+        self.direction = 1  # 1 for clockwise, -1 for counter-clockwise
+        self.game_over = False
+
+    def add_player(self, user):
+        if len(self.players) < 10:  # Limit number of players to 10
+            self.players.append(Player(user))
+            self.turn_order.append(user)
+            return True
+        return False
+
+    def next_turn(self):
+        if self.direction == 1:
+            self.turn_order.rotate(-1)
+        else:
+            self.turn_order.rotate(1)
+        self.current_player = self.turn_order[0]
+
+    def get_valid_moves(self, player):
+        valid_moves = []
+        top_card = self.discard_pile[0]
+        for card in player.hand:
+            if card.color == top_card.color or card.rank == top_card.rank or card.color == 'Wild':
+                valid_moves.append(card)
+        return valid_moves
+
+    def play_card(self, player, card):
+        self.discard_pile.appendleft(card)
+        if card.rank == 'Skip':
+            self.next_turn()  # Skip the next player's turn
+        elif card.rank == 'Reverse':
+            self.direction *= -1  # Reverse the direction of play
+        elif card.rank == 'Draw2':
+            next_player = self.turn_order[1] if self.direction == 1 else self.turn_order[-1]
+            next_player.draw_card(self.deck)
+            next_player.draw_card(self.deck)
+            self.next_turn()
+        elif card.rank == 'Wild':
+            pass  # Wild card can be played, no special effect yet
+        elif card.rank == 'WildDraw4':
+            next_player = self.turn_order[1] if self.direction == 1 else self.turn_order[-1]
+            next_player.draw_card(self.deck)
+            next_player.draw_card(self.deck)
+            next_player.draw_card(self.deck)
+            next_player.draw_card(self.deck)
+            self.next_turn()
+
+        player.play_card(card)
+        self.next_turn()
+
+    def check_game_over(self):
+        for player in self.players:
+            if len(player.hand) == 0:
+                self.game_over = True
+                return player
+        return None
+
 def load_hardcoded_admins():
     try:
         with open(ADMIN_FILE, "r") as f:
@@ -156,6 +255,97 @@ async def list_admins(ctx):
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
+
+@bot.command(name="start_game")
+async def start_game(ctx):
+    if ctx.guild.id in active_games:
+        await ctx.send("A game is already running!")
+        return
+    game = Game(ctx.author)
+    active_games[ctx.guild.id] = game
+    await ctx.send(f"Game started by {ctx.author.mention}! Type `..join` to join the game.")
+
+@bot.command(name="join")
+async def join_game(ctx):
+    game = active_games.get(ctx.guild.id)
+    if not game:
+        await ctx.send("No game is running!")
+        return
+    if game.add_player(ctx.author):
+        await ctx.send(f"{ctx.author.mention} has joined the game!")
+    else:
+        await ctx.send("The game is full!")
+
+@bot.command(name="play")
+async def play_card(ctx, card_name: str):
+    game = active_games.get(ctx.guild.id)
+    if not game:
+        await ctx.send("No game is running!")
+        return
+
+    player = next((p for p in game.players if p.user == ctx.author), None)
+    if player is None:
+        await ctx.send("You are not in the game!")
+        return
+
+    # Simplified validation: check if the card is in the player's hand
+    card = next((c for c in player.hand if str(c).lower() == card_name.lower()), None)
+    if not card:
+        await ctx.send("❌ Invalid card!")
+        return
+    
+    # Check if the card is valid to play
+    valid_moves = game.get_valid_moves(player)
+    if card not in valid_moves:
+        await ctx.send("❌ This card cannot be played!")
+        return
+
+    game.play_card(player, card)
+    await ctx.send(f"{ctx.author.mention} played {card_name}.")
+    winner = game.check_game_over()
+    if winner:
+        await ctx.send(f"🎉 {winner.user.mention} wins the game!")
+        del active_games[ctx.guild.id]  # End the game
+
+@bot.command(name="draw")
+async def draw_card(ctx):
+    game = active_games.get(ctx.guild.id)
+    if not game:
+        await ctx.send("No game is running!")
+        return
+
+    player = next((p for p in game.players if p.user == ctx.author), None)
+    if player is None:
+        await ctx.send("You are not in the game!")
+        return
+
+    card = player.draw_card(game.deck)
+    await ctx.send(f"{ctx.author.mention} drew {card}.")
+    if card:
+        await ctx.send(f"{ctx.author.mention}'s hand: " + ", ".join(str(c) for c in player.hand))
+
+@bot.command(name="rules")
+async def rules(ctx):
+    rules_text = """
+    **UNO Game Rules:**
+    - **Goal**: Be the first player to get rid of all your cards.
+    - **Card Types**:
+      - **Number cards (0-9)**: Played if the color or number matches the card on top of the discard pile.
+      - **Skip**: Skips the next player's turn.
+      - **Reverse**: Reverses the direction of play.
+      - **Draw2**: The next player must draw 2 cards and skip their turn.
+      - **Wild**: Allows the player to change the color in play.
+      - **WildDraw4**: Allows the player to change the color and forces the next player to draw 4 cards and skip their turn.
+    - **How to Play**:
+      1. Players take turns in the order of the turn list.
+      2. On your turn, play a card that matches the color or rank of the top card on the discard pile or play a wild card.
+      3. If you can't play any cards, you must draw one from the deck.
+      4. The first player to have no cards left wins the game.
+    - **Special Notes**:
+      - You can play a wild card at any time.
+      - The game ends when a player has no cards left in their hand.
+    """
+    await ctx.send(rules_text)
 
 AFK_FILE = "afk_data.json"
 
