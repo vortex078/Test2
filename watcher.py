@@ -282,7 +282,12 @@ async def join_game(ctx):
     await show_hand(ctx, player)
 
 @bot.command(name="play")
-async def play_card(ctx, card_name: str):
+async def play_card(ctx, card_name: str = None):
+    # If no card name is provided, return an error message
+    if not card_name:
+        await ctx.send("❌ You need to specify a card to play. Use `..play <card_name>`.")
+        return
+
     game = active_games.get(ctx.guild.id)
     if not game:
         await ctx.send("No game is running.")
@@ -319,6 +324,7 @@ async def play_card(ctx, card_name: str):
     next_player = game.next_player()
     await ctx.send(f"Now it's {next_player.name}'s turn.")
     await show_hand(ctx, next_player)
+
 
 async def show_hand(ctx, player):
     hand = '\n'.join([f"{card.rank} of {card.suit}" for card in player.hand])
