@@ -321,7 +321,7 @@ async def start_game(ctx, *players: discord.Member):
 @bot.command(name="hand")
 async def show_hand(ctx):
     if ctx.author != game.current_player:
-        await ctx.send("It's not your turn!")
+        await ctx.send("It's not your turn!", ephemeral=True)
         return
 
     hand = game.get_player_hand(ctx.author)
@@ -332,11 +332,10 @@ async def show_hand(ctx):
     async def card_button_callback(interaction, card):
         game.player_hands[ctx.author].remove(card)
         game.current_card = card
-        await ctx.send(f"{ctx.author.mention} played {card}.")
+        await ctx.send(f"{ctx.author.mention} played {card}. It’s now {game.current_player.mention}'s turn.")
 
         # Advance the turn
         game.advance_turn()
-        await ctx.send(f"It's now {game.current_player.mention}'s turn.")
 
     # Add the callbacks for each card button
     for card, button in zip(hand, card_buttons):
@@ -347,7 +346,7 @@ async def show_hand(ctx):
     for button in card_buttons:
         card_view.add_item(button)
 
-    await ctx.send(f"{ctx.author.mention}'s hand:", view=card_view, ephemeral=True)
+    await ctx.send(f"{ctx.author.mention}'s hand (only you can see this):", view=card_view, ephemeral=True)
 
 # Command to play a card (when not using buttons)
 @bot.command(name="play")
@@ -397,44 +396,6 @@ async def skip(ctx):
 async def end_game(ctx):
     game.game_over = True
     await ctx.send("The game has ended!")
-
-@bot.command(name="rules")
-async def rules(ctx):
-    rules_text = """
-    **UNO Game Rules:**
-    
-    1. **Objective**: The first player to discard all their cards wins.
-    
-    2. **Setup**: Each player starts with 7 cards. A card is drawn from the deck and placed face-up in the center. The first player plays a card that matches the color or number of the top card in the discard pile. If they cannot play, they must draw a card.
-    
-    3. **Card Types**:
-        - **Number Cards**: Cards numbered 0-9.
-        - **Action Cards**: Special cards with unique effects.
-            - **Skip**: The next player is skipped.
-            - **Reverse**: Reverses the direction of play.
-            - **Draw Two**: The next player draws 2 cards and loses their turn.
-            - **Wild**: The player can change the color of play to any color.
-            - **Wild Draw Four**: The next player draws 4 cards and loses their turn. The color of play is changed.
-    
-    4. **Playing a Card**: To play a card, it must either match the color or the number of the top card in the discard pile. Wild cards can be played at any time.
-    
-    5. **Drawing Cards**: If you cannot play any card from your hand, you must draw a card from the deck. If the drawn card can be played, you may play it immediately.
-    
-    6. **UNO**: When you have only one card left, you must say "UNO". If you don't say "UNO" and another player catches you before your next turn, you must draw 2 cards as a penalty.
-    
-    7. **Winning**: The first player to discard all their cards wins the game. The game ends when there are no cards left in the deck.
-
-    **Good luck and have fun!**
-    """
-    
-    embed = discord.Embed(
-        title="UNO Game Rules",
-        description=rules_text,
-        color=discord.Color.blue()
-    )
-    
-    await ctx.send(embed=embed)
-
 
 AFK_FILE = "afk_data.json"
 
