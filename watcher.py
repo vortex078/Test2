@@ -187,11 +187,10 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    print(f"Message detected: {message.author}")  # Debugging
+
     user_id = str(message.author.id)
 
-    print(f"on_message triggered for {message.author}")  # Debugging
-
-    # Remove AFK if the user sends a message
     if user_id in afk_users:
         afk_info = afk_users.pop(user_id)  # Remove from AFK
         save_afk_data(afk_users)  # Save changes
@@ -199,7 +198,7 @@ async def on_message(message):
         afk_time = int(time.time() - afk_info["time"])
         minutes, seconds = divmod(afk_time, 60)
 
-        print(f"Removing AFK for {message.author}")  # Debugging
+        print(f"AFK removed for {message.author}")  # Debugging
 
         embed = discord.Embed(
             description=f"✅ {message.author.mention}, welcome back! You were AFK for **{minutes}m {seconds}s**.",
@@ -207,24 +206,8 @@ async def on_message(message):
         )
         await message.channel.send(embed=embed)
 
-    # Notify if someone mentions an AFK user
-    for mention in message.mentions:
-        mentioned_id = str(mention.id)
-        if mentioned_id in afk_users:
-            afk_info = afk_users[mentioned_id]
-            afk_reason = afk_info["reason"]
-            afk_time = int(time.time() - afk_info["time"])
-            minutes, seconds = divmod(afk_time, 60)
+    await bot.process_commands(message)  # Ensure commands still work
 
-            print(f"User {mention} is AFK with reason: {afk_reason}")  # Debugging
-
-            embed = discord.Embed(
-                description=f"⚠️ {mention.mention} is AFK: **{afk_reason}**\n⏳ AFK for: **{minutes}m {seconds}s**",
-                color=discord.Color.orange()
-            )
-            await message.channel.send(embed=embed)
-
-    await bot.process_commands(message)  # Ensure commands work
 
 @bot.command(name="i")
 @is_admin()
