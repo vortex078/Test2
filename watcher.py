@@ -622,14 +622,15 @@ async def on_message_delete(message):
 @bot.command(name="s")
 async def snipe(ctx):
     if ctx.channel.id in sniped_messages:
-        author, content = sniped_messages[ctx.channel.id]
+        author, content, timestamp = sniped_messages[ctx.channel.id]
         embed = discord.Embed(title="Sniped Message", description=content, color=discord.Color.red())
         embed.set_footer(text=f"Deleted message from {author}")
+        embed.timestamp = timestamp  # Set the timestamp to when the message was deleted
         await ctx.send(embed=embed)
     else:
         await ctx.message.add_reaction("❌")
         await asyncio.sleep(1)
-        await ctx.message.delete() 
+        await ctx.message.delete()
 
 
 @bot.command(name="cs")
