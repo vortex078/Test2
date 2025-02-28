@@ -292,7 +292,7 @@ async def start_game(ctx, *players: discord.Member):
         async def card_button_callback(interaction, card):
             game.player_hands[game.current_player].remove(card)
             game.current_card = card
-            await ctx.send(f"{game.current_player.mention} played {card}.", ephemeral=True)
+            await ctx.send(f"{game.current_player.mention} played {card}.")
 
             # Advance the turn
             game.advance_turn()
