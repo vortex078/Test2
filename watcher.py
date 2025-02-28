@@ -299,7 +299,6 @@ async def on_button_click(interaction):
 async def show_rules(ctx):
     rules = """
     **UNO Game Rules:**
-
     1. **Objective:** The goal of UNO is to be the first player to score 500 points.
     2. **Gameplay:**
         - Players take turns in clockwise or counter-clockwise order.
