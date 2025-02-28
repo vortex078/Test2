@@ -347,7 +347,7 @@ async def show_hand(ctx):
     for button in card_buttons:
         card_view.add_item(button)
 
-    await ctx.author.send(f"{ctx.author.mention}'s hand (only you can see this):", view=card_view, ephemeral=True)
+    await ctx.author.send(f"{ctx.author.mention}'s hand (only you can see this):", view=card_view)
 
 # Command to play a card (when not using buttons)
 @bot.command(name="play")
