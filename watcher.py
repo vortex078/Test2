@@ -617,7 +617,7 @@ async def on_message_delete(message):
     if message.author.bot:
         return
     # Store author, content, and timestamp
-    sniped_messages[message.channel.id] = (message.author.name, message.content, datetime.datetime.utcnow())
+    sniped_messages[message.channel.id] = (message.author.name, message.content, datetime.utcnow())
 
 
 @bot.command(name="s")
