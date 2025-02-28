@@ -189,6 +189,8 @@ async def on_message(message):
 
     user_id = str(message.author.id)
 
+    print(f"on_message triggered for {message.author}")  # Debugging
+
     # Remove AFK if the user sends a message
     if user_id in afk_users:
         afk_info = afk_users.pop(user_id)  # Remove from AFK
@@ -196,6 +198,8 @@ async def on_message(message):
 
         afk_time = int(time.time() - afk_info["time"])
         minutes, seconds = divmod(afk_time, 60)
+
+        print(f"Removing AFK for {message.author}")  # Debugging
 
         embed = discord.Embed(
             description=f"✅ {message.author.mention}, welcome back! You were AFK for **{minutes}m {seconds}s**.",
@@ -212,13 +216,15 @@ async def on_message(message):
             afk_time = int(time.time() - afk_info["time"])
             minutes, seconds = divmod(afk_time, 60)
 
+            print(f"User {mention} is AFK with reason: {afk_reason}")  # Debugging
+
             embed = discord.Embed(
                 description=f"⚠️ {mention.mention} is AFK: **{afk_reason}**\n⏳ AFK for: **{minutes}m {seconds}s**",
                 color=discord.Color.orange()
             )
             await message.channel.send(embed=embed)
 
-    await bot.process_commands(message)
+    await bot.process_commands(message)  # Ensure commands work
 
 @bot.command(name="i")
 @is_admin()
