@@ -182,31 +182,7 @@ async def afk(ctx, *, reason: str = "AFK"):
     )
     await ctx.send(embed=embed)
 
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
 
-    print(f"Message detected: {message.author}")  # Debugging
-
-    user_id = str(message.author.id)
-
-    if user_id in afk_users:
-        afk_info = afk_users.pop(user_id)  # Remove from AFK
-        save_afk_data(afk_users)  # Save changes
-
-        afk_time = int(time.time() - afk_info["time"])
-        minutes, seconds = divmod(afk_time, 60)
-
-        print(f"AFK removed for {message.author}")  # Debugging
-
-        embed = discord.Embed(
-            description=f"✅ {message.author.mention}, welcome back! You were AFK for **{minutes}m {seconds}s**.",
-            color=discord.Color.green()
-        )
-        await message.channel.send(embed=embed)
-
-    await bot.process_commands(message)  # Ensure commands still work
 
 
 @bot.command(name="i")
@@ -862,6 +838,40 @@ async def stlog(ctx):
 
 @bot.event
 async def on_message(message):
+    if message.author.bot:
+        return  # Ignore bot messages
+
+    # ✅ Check if the author was AFK
+    user_id = str(message.author.id)
+    if user_id in afk_users:
+        afk_info = afk_users.pop(user_id)
+        save_afk_data(afk_users)  # Save changes
+
+        afk_time = int(time.time() - afk_info["time"])
+        minutes, seconds = divmod(afk_time, 60)
+
+        embed = discord.Embed(
+            description=f"✅ {message.author.mention}, welcome back! You were AFK for **{minutes}m {seconds}s**.",
+            color=discord.Color.green()
+        )
+        await message.channel.send(embed=embed)
+
+    # ✅ Check mentions for AFK users
+    for mention in message.mentions:
+        mentioned_id = str(mention.id)
+        if mentioned_id in afk_users:
+            afk_info = afk_users[mentioned_id]
+            afk_reason = afk_info["reason"]
+            afk_time = int(time.time() - afk_info["time"])
+            minutes, seconds = divmod(afk_time, 60)
+
+            embed = discord.Embed(
+                description=f"⚠️ {mention.mention} is AFK: **{afk_reason}**\n⏳ AFK for: **{minutes}m {seconds}s**",
+                color=discord.Color.orange()
+            )
+            await message.channel.send(embed=embed)
+
+    # ✅ Logging bot command interactions
     if message.author == bot.user:
         return
 
@@ -882,7 +892,7 @@ async def on_message(message):
 
                 await channel.send(embed=embed)
 
-    await bot.process_commands(message)
+    await bot.process_commands(message)  # Ensure commands still work
 
 @bot.event
 async def on_message_edit(before, after):
