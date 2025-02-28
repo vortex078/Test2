@@ -25,6 +25,97 @@ OWNER_ID = 707584409531842623
 
 ADMIN_FILE = "admins.json"
 
+# UNO card ranks and suits
+SUITS = ['Red', 'Yellow', 'Green', 'Blue']
+RANKS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Skip', 'Reverse', 'Draw2', 'Wild', 'WildDraw4']
+
+class Card:
+    def __init__(self, suit, rank):
+        self.suit = suit
+        self.rank = rank
+
+    def __repr__(self):
+        return f"{self.rank} of {self.suit}"
+
+class Deck:
+    def __init__(self):
+        self.cards = [Card(suit, rank) for suit in SUITS for rank in RANKS] + [Card('Wild', 'Wild'), Card('Wild', 'WildDraw4')] * 4
+        random.shuffle(self.cards)
+
+    def draw_card(self):
+        return self.cards.pop() if self.cards else None
+
+class Game:
+    def __init__(self):
+        self.players = []
+        self.deck = Deck()
+        self.discard_pile = deque()
+        self.turn_order = deque()
+        self.current_player = None
+        self.direction = 1  # 1 for clockwise, -1 for counter-clockwise
+        self.game_over = False
+
+    def add_player(self, player):
+        self.players.append(player)
+        self.turn_order.append(player)
+
+    def start_game(self):
+        for player in self.players:
+            player.hand = [self.deck.draw_card() for _ in range(7)]
+        self.discard_pile.append(self.deck.draw_card())
+        self.current_player = self.turn_order[0]
+        self.game_over = False
+
+    def get_valid_moves(self, player):
+        top_card = self.discard_pile[-1]
+        return [card for card in player.hand if card.suit == top_card.suit or card.rank == top_card.rank or card.rank in ['Wild', 'WildDraw4']]
+
+    def play_card(self, player, card):
+        self.discard_pile.append(card)
+        player.hand.remove(card)
+        if card.rank == 'Skip':
+            self.skip_turn()
+        elif card.rank == 'Reverse':
+            self.reverse_turn_order()
+        elif card.rank == 'Draw2':
+            self.draw_cards_for_next_player(2)
+        elif card.rank == 'WildDraw4':
+            self.draw_cards_for_next_player(4)
+            # You could add color change logic here
+        self.check_game_over()
+
+    def skip_turn(self):
+        self.current_player = self.next_player()
+
+    def reverse_turn_order(self):
+        self.turn_order.reverse()
+        self.direction *= -1
+        self.current_player = self.next_player()
+
+    def draw_cards_for_next_player(self, count):
+        next_player = self.next_player()
+        next_player.hand.extend([self.deck.draw_card() for _ in range(count)])
+
+    def next_player(self):
+        current_idx = self.players.index(self.current_player)
+        next_idx = (current_idx + self.direction) % len(self.players)
+        return self.players[next_idx]
+
+    def check_game_over(self):
+        for player in self.players:
+            if len(player.hand) == 0:
+                self.game_over = True
+                self.current_player = None
+                break
+
+class Player:
+    def __init__(self, user):
+        self.user = user
+        self.hand = []
+
+    def __repr__(self):
+        return self.user.name
+
 def load_hardcoded_admins():
     try:
         with open(ADMIN_FILE, "r") as f:
@@ -154,6 +245,79 @@ async def list_admins(ctx):
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
+
+active_games = {}
+
+@bot.command(name="start")
+async def start_game(ctx):
+    if ctx.guild.id in active_games:
+        await ctx.send("A game is already running in this server.")
+        return
+
+    game = Game()
+    player = Player(ctx.author)
+    game.add_player(player)
+    active_games[ctx.guild.id] = game
+    game.start_game()
+
+    await ctx.send(f"Game started! It's {ctx.author.name}'s turn.")
+    await show_hand(ctx, player)
+
+@bot.command(name="join")
+async def join_game(ctx):
+    if ctx.guild.id not in active_games:
+        await ctx.send("No game is currently running.")
+        return
+
+    game = active_games[ctx.guild.id]
+    if game.game_over:
+        await ctx.send("The game is over. Start a new game.")
+        return
+
+    player = Player(ctx.author)
+    game.add_player(player)
+    await ctx.send(f"{ctx.author.name} joined the game!")
+    await show_hand(ctx, player)
+
+@bot.command(name="play")
+async def play_card(ctx, card_name: str):
+    game = active_games.get(ctx.guild.id)
+    if not game:
+        await ctx.send("No game is running.")
+        return
+    if game.current_player.user != ctx.author:
+        await ctx.send("It's not your turn!")
+        return
+
+    # Find the card in the player's hand
+    player = next(p for p in game.players if p.user == ctx.author)
+    card = next((c for c in player.hand if f"{c.rank} of {c.suit}" == card_name), None)
+
+    if not card:
+        await ctx.send("Invalid card!")
+        return
+
+    valid_moves = game.get_valid_moves(player)
+    if card not in valid_moves:
+        await ctx.send("You can't play this card!")
+        return
+
+    game.play_card(player, card)
+    await ctx.send(f"{ctx.author.name} played {card_name}.")
+
+    # Check if the game is over
+    if game.game_over:
+        winner = game.players[0]  # Game over; first player wins for simplicity
+        await ctx.send(f"Game over! {winner.name} wins!")
+
+    # Continue with next player's turn
+    next_player = game.next_player()
+    await ctx.send(f"Now it's {next_player.name}'s turn.")
+    await show_hand(ctx, next_player)
+
+async def show_hand(ctx, player):
+    hand = '\n'.join([f"{card.rank} of {card.suit}" for card in player.hand])
+    await ctx.send(f"{player.user.name}'s hand:\n{hand}")
 
 AFK_FILE = "afk_data.json"
 
