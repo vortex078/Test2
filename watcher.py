@@ -347,6 +347,25 @@ async def rules(ctx):
     """
     await ctx.send(rules_text)
 
+@bot.command(name="hand")
+async def show_hand(ctx):
+    game = active_games.get(ctx.guild.id)
+    if not game:
+        await ctx.send("No game is running!")
+        return
+
+    player = next((p for p in game.players if p.user == ctx.author), None)
+    if player is None:
+        await ctx.send("You are not in the game!")
+        return
+
+    if not player.hand:
+        await ctx.send(f"{ctx.author.mention}, you have no cards left!")
+        return
+
+    hand_cards = [f"{i+1}. {str(card)}" for i, card in enumerate(player.hand)]
+    await ctx.send(f"{ctx.author.mention}, your hand: \n" + "\n".join(hand_cards))
+
 AFK_FILE = "afk_data.json"
 
 def load_afk_data():
