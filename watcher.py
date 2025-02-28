@@ -332,7 +332,7 @@ async def show_hand(ctx):
     async def card_button_callback(interaction, card):
         game.player_hands[ctx.author].remove(card)
         game.current_card = card
-        await interaction.response.send_message(f"{ctx.author.mention} played {card}.")
+        await ctx.send(f"{ctx.author.mention} played {card}.")
 
         # Advance the turn
         game.advance_turn()
