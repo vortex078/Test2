@@ -347,7 +347,7 @@ async def show_hand(ctx):
         card_view.add_item(button)
 
     # Show the hand privately within the same channel (ephemeral message)
-    await ctx.send(f"Your hand (only you can see this):", view=card_view, ephemeral=True)
+    await ctx.interaction.response.send_message(f"{ctx.author.mention}'s hand (only you can see this):", view=card_view, ephemeral=True)
 
 # Command to play a card (when not using buttons)
 @bot.command(name="play")
