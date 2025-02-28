@@ -282,11 +282,7 @@ async def join_game(ctx):
     await show_hand(ctx, player)
 
 @bot.command(name="play")
-async def play_card(ctx, card_name: str = None):
-    if not card_name:
-        await ctx.send("❌ Please specify a card to play. Example: `..play 3 of Red`.")
-        return
-
+async def play_card(ctx, card_name: str):
     game = active_games.get(ctx.guild.id)
     if not game:
         await ctx.send("No game is running.")
@@ -295,9 +291,12 @@ async def play_card(ctx, card_name: str = None):
         await ctx.send("It's not your turn!")
         return
 
+    # Clean up and normalize the card name
+    card_name = card_name.strip().lower()  # Remove leading/trailing spaces and make it lowercase
+    
     # Find the card in the player's hand
     player = next(p for p in game.players if p.user == ctx.author)
-    card = next((c for c in player.hand if f"{c.rank} of {c.suit}" == card_name), None)
+    card = next((c for c in player.hand if f"{c.rank} of {c.suit}".lower() == card_name), None)
 
     if not card:
         await ctx.send("❌ Invalid card!")
@@ -315,11 +314,6 @@ async def play_card(ctx, card_name: str = None):
     if game.game_over:
         winner = game.players[0]  # Game over; first player wins for simplicity
         await ctx.send(f"Game over! {winner.name} wins!")
-
-    # Continue with next player's turn
-    next_player = game.next_player()
-    await ctx.send(f"Now it's {next_player.name}'s turn.")
-    await show_hand(ctx, next_player)
 
     # Continue with next player's turn
     next_player = game.next_player()
