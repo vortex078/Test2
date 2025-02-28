@@ -236,7 +236,7 @@ async def start_game(ctx, *players: discord.Member):
         async def card_button_callback(interaction, card):
             game.player_hands[game.current_player].remove(card)
             game.current_card = card
-            await interaction.response.send_message(f"{game.current_player.mention} played {card}.", ephemeral=True)
+            await interaction.response.send_message(f"{game.current_player.mention} played {card}.", ephemeral=False)
 
             # Advance the turn
             game.advance_turn()
@@ -332,10 +332,11 @@ async def show_hand(ctx):
     async def card_button_callback(interaction, card):
         game.player_hands[ctx.author].remove(card)
         game.current_card = card
-        await ctx.send(f"{ctx.author.mention} played {card}. It’s now {game.current_player.mention}'s turn.")
+        await ctx.send(f"{ctx.author.mention} played {card}.", ephemeral=False)
 
         # Advance the turn
         game.advance_turn()
+        await ctx.send(f"It's now {game.current_player.mention}'s turn.")
 
     # Add the callbacks for each card button
     for card, button in zip(hand, card_buttons):
