@@ -317,7 +317,6 @@ async def start_game(ctx, *players: discord.Member):
     # Show the interactive buttons
     await ctx.send("Click below to show your hand, draw a card, or play a card!", view=view)
 
-# Command to show player's hand (with ephemeral messages)
 @bot.command(name="hand")
 async def show_hand(ctx):
     if ctx.author != game.current_player:
@@ -332,11 +331,11 @@ async def show_hand(ctx):
     async def card_button_callback(interaction, card):
         game.player_hands[ctx.author].remove(card)
         game.current_card = card
-        await ctx.send(f"{ctx.author.mention} played {card}.", ephemeral=False)
+        await interaction.response.send_message(f"{ctx.author.mention} played {card}.", ephemeral=False)  # Public message
 
         # Advance the turn
         game.advance_turn()
-        await ctx.send(f"It's now {game.current_player.mention}'s turn.")
+        await interaction.response.send_message(f"It's now {game.current_player.mention}'s turn.", ephemeral=False)  # Public message
 
     # Add the callbacks for each card button
     for card, button in zip(hand, card_buttons):
@@ -347,6 +346,7 @@ async def show_hand(ctx):
     for button in card_buttons:
         card_view.add_item(button)
 
+    # Show the hand privately within the same channel (ephemeral message)
     await ctx.send(f"{ctx.author.mention}'s hand (only you can see this):", view=card_view, ephemeral=True)
 
 # Command to play a card (when not using buttons)
