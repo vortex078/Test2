@@ -478,9 +478,8 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
             color=discord.Color.green()
         )
         embed.set_footer(text="Roles are listed in alphabetical order.")
-        msg = await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
         await asyncio.sleep(5)
-        await msg.delete()
         await ctx.message.delete()
         return
 
