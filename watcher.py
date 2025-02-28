@@ -174,15 +174,13 @@ afk_users = load_afk_data()
 async def afk(ctx, *, reason: str = "AFK"):
     """Marks the user as AFK with an optional reason."""
     afk_users[str(ctx.author.id)] = {"reason": reason, "time": time.time()}
-    save_afk_data(afk_users)  # Save to file
+    save_afk_data(afk_users)
 
     embed = discord.Embed(
         description=f"✅ {ctx.author.mention}: You're now AFK with the status: **{reason}**",
         color=discord.Color.dark_gray()
     )
     await ctx.send(embed=embed)
-
-
 
 
 @bot.command(name="i")
@@ -468,6 +466,13 @@ async def r(ctx, action: str = None, role_name: str = None, member: discord.Memb
     if ctx.author.id != OWNER_ID:
         await ctx.message.add_reaction("❌")
         await asyncio.sleep(3)
+        await ctx.message.delete()
+        return
+    
+    if action is None:
+        roles = [role.name for role in ctx.guild.roles]
+        await ctx.send(f"✅ Available roles in this server:\n" + "\n".join(roles))
+        await asyncio.sleep(5)
         await ctx.message.delete()
         return
 
@@ -839,13 +844,12 @@ async def stlog(ctx):
 @bot.event
 async def on_message(message):
     if message.author.bot:
-        return  # Ignore bot messages
+        return
 
-    # ✅ Check if the author was AFK
     user_id = str(message.author.id)
     if user_id in afk_users:
         afk_info = afk_users.pop(user_id)
-        save_afk_data(afk_users)  # Save changes
+        save_afk_data(afk_users)
 
         afk_time = int(time.time() - afk_info["time"])
         minutes, seconds = divmod(afk_time, 60)
@@ -856,7 +860,6 @@ async def on_message(message):
         )
         await message.channel.send(embed=embed)
 
-    # ✅ Check mentions for AFK users
     for mention in message.mentions:
         mentioned_id = str(mention.id)
         if mentioned_id in afk_users:
@@ -871,7 +874,6 @@ async def on_message(message):
             )
             await message.channel.send(embed=embed)
 
-    # ✅ Logging bot command interactions
     if message.author == bot.user:
         return
 
@@ -892,7 +894,7 @@ async def on_message(message):
 
                 await channel.send(embed=embed)
 
-    await bot.process_commands(message)  # Ensure commands still work
+    await bot.process_commands(message)
 
 @bot.event
 async def on_message_edit(before, after):
