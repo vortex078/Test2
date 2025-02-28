@@ -396,7 +396,7 @@ async def skip(ctx):
 @bot.command(name="end_game")
 async def end_game(ctx):
     game.game_over = True
-
+    await ctx.send("The game has ended!")
 
 @bot.command(name="rules")
 async def rules(ctx):
